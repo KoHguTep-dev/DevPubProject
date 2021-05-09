@@ -9,14 +9,16 @@ import java.util.Date;
 @Table(name = "post_votes")
 public class PostVote {
 
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "user_id", nullable = false)
-    private int userId;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User userId;
 
-    @Column(name = "post_id", nullable = false)
-    private int postId;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post postId;
 
     @Column(nullable = false)
     private Date time;
@@ -32,19 +34,19 @@ public class PostVote {
         this.id = id;
     }
 
-    public int getUserId() {
+    public User getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
+    public void setUserId(User userId) {
         this.userId = userId;
     }
 
-    public int getPostId() {
+    public Post getPostId() {
         return postId;
     }
 
-    public void setPostId(int postId) {
+    public void setPostId(Post postId) {
         this.postId = postId;
     }
 

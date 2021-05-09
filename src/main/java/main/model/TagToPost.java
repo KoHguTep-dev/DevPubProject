@@ -6,7 +6,7 @@ import javax.persistence.*;
 @Table(name = "tag2post")
 public class TagToPost {
 
-    @Id @GeneratedValue(strategy = GenerationType.AUTO)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @Column(name = "post_id", nullable = false)
