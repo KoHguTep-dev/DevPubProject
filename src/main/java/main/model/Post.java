@@ -33,14 +33,13 @@ public class Post {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
-    @Type(type = "text")
+    @Column(nullable = false) @Type(type = "text")
     private String text;
 
     @Column(name = "view_count", nullable = false)
     private int viewCount;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name = "tag2post", joinColumns = {@JoinColumn(name = "post_id")},
     inverseJoinColumns = {@JoinColumn(name = "tag_id")})
     private List<Tag> tags;
