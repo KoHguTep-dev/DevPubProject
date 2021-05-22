@@ -1,12 +1,14 @@
 package main.service;
 
-import org.springframework.stereotype.Component;
-
-@Component
 public class UserBasic {
 
     private int id;
     private String name;
+
+    public UserBasic(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 
     public int getId() {
         return id;
