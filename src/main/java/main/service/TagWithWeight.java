@@ -12,7 +12,7 @@ import java.util.List;
 public class TagWithWeight {
 
     @Autowired
-    TagsRepository tagsRepository;
+    private TagsRepository tagsRepository;
 
     private String name;
     private double weight;
@@ -44,17 +44,15 @@ public class TagWithWeight {
     }
 
     public double computeK(double k, int count) {
-        if (k == 0) {
-            List<Integer> list = new ArrayList<>();
-            tagsRepository.findAll().forEach(tag -> {
-                int size = tag.getPosts().size();
-                list.add(size);
-            });
-            Collections.reverse(list);
-            int value = list.get(0);
-            double meta = (double) value / count;
-            k = 1 / meta;
-        }
+        List<Integer> list = new ArrayList<>();
+        tagsRepository.findAll().forEach(tag -> {
+            int size = tag.getPosts().size();
+            list.add(size);
+        });
+        Collections.reverse(list);
+        int value = list.get(0);
+        double meta = (double) value / count;
+        k = 1 / meta;
         return k;
     }
 }

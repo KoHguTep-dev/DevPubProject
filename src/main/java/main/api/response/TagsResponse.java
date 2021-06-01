@@ -15,13 +15,13 @@ import java.util.List;
 public class TagsResponse {
 
     @Autowired
-    TagsRepository tagsRepository;
+    private TagsRepository tagsRepository;
 
     @Autowired
-    TagWithWeight tagWithWeight;
+    private TagWithWeight tagWithWeight;
 
     @Autowired
-    PostsRepository postsRepository;
+    private PostsRepository postsRepository;
 
     private List<TagWithWeight> tags = new ArrayList<>();
     private double k;
