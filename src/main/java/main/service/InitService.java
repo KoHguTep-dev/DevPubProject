@@ -8,7 +8,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Data
 @Configuration
-@PropertySource("init.properties")
+@PropertySource("init.yml")
 public class InitService {
 
     private InitResponse initResponse;
