@@ -203,5 +203,5 @@ $RECYCLE.BIN/
 *.mf
 
 #Cfg
-*.properties
-*.yml
+#*.properties
+#*.yml
