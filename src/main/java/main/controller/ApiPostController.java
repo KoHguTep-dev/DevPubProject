@@ -1,7 +1,8 @@
 package main.controller;
 
-import main.api.response.PostsResponse;
-import main.service.PostView;
+import main.api.response.post.PostResponse;
+import main.api.response.post.PostView;
+import main.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,59 +14,52 @@ import org.springframework.web.bind.annotation.*;
 public class ApiPostController {
 
     @Autowired
-    private PostsResponse postsResponse;
-
-    @Autowired
-    private PostView postView;
+    private PostService postService;
 
     @GetMapping("")
     @ResponseBody
-    private PostsResponse getPosts(
+    private ResponseEntity<PostResponse> getPosts(
             @RequestParam("offset") int offset,
             @RequestParam("limit") int limit,
             @RequestParam("mode") String mode) {
-        postsResponse.addPosts(offset, limit, mode);
-        return postsResponse;
+        return ResponseEntity.ok(postService.postResponse(offset, limit, mode));
     }
 
     @GetMapping("/search")
     @ResponseBody
-    private PostsResponse getSearch(
+    private ResponseEntity<PostResponse> getSearch(
             @RequestParam("offset") int offset,
             @RequestParam("limit") int limit,
             @RequestParam("query") String query) {
-        postsResponse.search(offset, limit, query);
-        return postsResponse;
+        return ResponseEntity.ok(postService.search(offset, limit, query));
     }
 
     @GetMapping("/byDate")
     @ResponseBody
-    private PostsResponse getByDate(
+    private ResponseEntity<PostResponse> getByDate(
             @RequestParam("offset") int offset,
             @RequestParam("limit") int limit,
             @RequestParam("date") String date) {
-        postsResponse.byDate(offset, limit, date);
-        return postsResponse;
+        return ResponseEntity.ok(postService.byDate(offset, limit, date));
     }
 
     @GetMapping("/byTag")
     @ResponseBody
-    private PostsResponse getByTag(
+    private ResponseEntity<PostResponse> getByTag(
             @RequestParam("offset") int offset,
             @RequestParam("limit") int limit,
             @RequestParam("tag") String tag) {
-        postsResponse.byTag(offset, limit, tag);
-        return postsResponse;
+        return ResponseEntity.ok(postService.byTag(offset, limit, tag));
     }
 
     @GetMapping("/{ID}")
     @ResponseBody
-    private ResponseEntity getPost(@PathVariable(name = "ID") int id) {
-        postView.get(id);
+    private ResponseEntity<PostView> getPost(@PathVariable(name = "ID") int id) {
+        PostView postView = postService.getPost(id);
         if (postView == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-        return new ResponseEntity(postView, HttpStatus.OK);
+        return ResponseEntity.ok(postView);
     }
 
 }

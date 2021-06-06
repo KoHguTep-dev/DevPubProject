@@ -1,41 +1,38 @@
-package main.api.response;
+package main.api.response.tags;
 
+import lombok.Setter;
 import main.model.ModerationStatus;
 import main.model.Post;
-import main.repository.PostsRepository;
-import main.repository.TagsRepository;
-import main.service.TagWithWeight;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import main.model.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
 public class TagsResponse {
 
-    @Autowired
-    private TagsRepository tagsRepository;
-
-    @Autowired
-    private TagWithWeight tagWithWeight;
-
-    @Autowired
-    private PostsRepository postsRepository;
-
+    @Setter
     private List<TagWithWeight> tags = new ArrayList<>();
     private double k;
     private int count;
+
+    private TagWithWeight tagWithWeight;
+    public static List<Tag> tagList;
+    public static List<Post> posts;
+
+    public TagsResponse(TagWithWeight tagWithWeight) {
+        this.tagWithWeight = tagWithWeight;
+        getTags();
+    }
 
     public List<TagWithWeight> getTags() {
         if (tags.isEmpty()) {
             setCount();
             if (k == 0) {
-                k = tagWithWeight.computeK(k, count);
+                k = tagWithWeight.computeK(count);
             }
-            tagsRepository.findAll().forEach(tag -> {
+            tagList.forEach(tag -> {
                 tagWithWeight.setName(tag.getName());
-                tagWithWeight.setWeight(tag.getId(), k, count);
+                tagWithWeight.setWeight(tag, k, count);
 
                 TagWithWeight tagW = new TagWithWeight();
                 tagW.getCopy(tagWithWeight);
@@ -48,18 +45,14 @@ public class TagsResponse {
     public List<TagWithWeight> getTags(String query) {
         tags.clear();
         TagWithWeight weight = new TagWithWeight();
-        weight.setName(tagsRepository.findByName(query).getName());
+        weight.setName(query);
         weight.setWeight(1.0);
         tags.add(weight);
         return tags;
     }
 
-    public void setTags(List<TagWithWeight> tags) {
-        this.tags = tags;
-    }
-
     public void setCount() {
-        for (Post post : postsRepository.findAll()) {
+        for (Post post : posts) {
             if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED) {
                 count++;
             }
