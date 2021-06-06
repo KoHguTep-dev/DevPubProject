@@ -1,26 +1,26 @@
 package main.api.response;
 
-import org.springframework.stereotype.Component;
+import com.github.cage.GCage;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang3.RandomStringUtils;
 
-@Component
+import java.util.Base64;
+
+@Getter @Setter
 public class CaptchaResponse {
 
     private String secret;
     private String image;
 
-    public String getSecret() {
-        return secret;
+    public String getCaptcha() {
+        GCage gCage = new GCage();
+        String text = gCage.getTokenGenerator().next();
+        byte[] bytes = gCage.draw(text);
+        String encode = Base64.getEncoder().encodeToString(bytes);
+        image = "data:image/png;base64, " + encode;
+        secret = RandomStringUtils.randomAlphanumeric(32);
+        return text;
     }
 
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
-
-    public String getImage() {
-        return image;
-    }
-
-    public void setImage(String image) {
-        this.image = image;
-    }
 }

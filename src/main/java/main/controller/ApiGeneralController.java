@@ -3,9 +3,11 @@ package main.controller;
 import main.api.response.CalendarResponse;
 import main.api.response.InitResponse;
 import main.api.response.SettingsResponse;
-import main.api.response.TagsResponse;
+import main.api.response.tags.TagsResponse;
+import main.service.CalendarService;
 import main.service.InitService;
 import main.service.SettingsService;
+import main.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,9 +24,9 @@ public class ApiGeneralController {
     @Autowired
     private SettingsService settingsService;
     @Autowired
-    private TagsResponse tagsResponse;
+    private TagService tagService;
     @Autowired
-    private CalendarResponse calendarResponse;
+    private CalendarService calendarService;
 
     @GetMapping("/init")
     private ResponseEntity<InitResponse> init() {
@@ -37,16 +39,13 @@ public class ApiGeneralController {
     }
 
     @GetMapping("/tag")
-    private TagsResponse getTags(@RequestParam(required = false, name = "query") String query) {
-        if (query != null) {
-            tagsResponse.getTags(query);
-        }
-        return tagsResponse;
+    private ResponseEntity<TagsResponse> getTags(@RequestParam(required = false, name = "query") String query) {
+        return ResponseEntity.ok(tagService.tagsResponse(query));
     }
 
     @GetMapping("/calendar")
-    private CalendarResponse getCalendar() {
-        return calendarResponse;
+    private ResponseEntity<CalendarResponse> getCalendar() {
+        return ResponseEntity.ok(calendarService.calendarResponse());
     }
 
 }

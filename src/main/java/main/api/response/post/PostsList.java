@@ -1,11 +1,10 @@
-package main.service;
+package main.api.response.post;
 
+import lombok.Setter;
+import main.api.response.user.UserBasic;
 import main.model.ModerationStatus;
 import main.model.Post;
-import main.repository.PostsRepository;
-import main.repository.TagsRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import main.model.Tag;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -13,80 +12,74 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-@Component
-public class PostsService {
+public class PostsList {
 
-    @Autowired
-    private PostsRepository postsRepository;
-    @Autowired
-    private PostPreview preview;
-    @Autowired
-    private TagsRepository tagsRepository;
-
+    @Setter
     private int count;
-    private List<PostPreview> posts = new ArrayList<>();
+    @Setter
+    private List<PostPreview> previews = new ArrayList<>();
+
+    public static List<Post> posts;
+
+    private PostPreview preview;
+
+    public PostsList(PostPreview preview) {
+        this.preview = preview;
+    }
 
     public int getCount() {
         if (count == 0) {
-            getPosts();
+            getPreviews();
         }
         return count;
     }
 
-    public void setCount(int count) {
-        this.count = count;
-    }
-
-    public List<PostPreview> getPosts() {
-        if (posts.isEmpty()) {
+    public List<PostPreview> getPreviews() {
+        if (previews.isEmpty()) {
             long time = System.currentTimeMillis();
-            postsRepository.findAll().forEach(post -> {
+            posts.forEach(post -> {
                 long postTime = post.getTime().getTime();
                 if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED && time > postTime) {
                     addPreview(post, postTime);
                 }
             });
         }
-        return posts;
-    }
-
-    public void setPosts(List<PostPreview> posts) {
-        this.posts = posts;
+        return previews;
     }
 
     public void recent() {
-        posts.clear();
+        previews.clear();
         count = 0;
-        posts = getPosts();
-        posts.sort(Comparator.comparing(PostPreview::getTimestamp).reversed());
+        previews = getPreviews();
+        previews.sort(Comparator.comparing(PostPreview::getTimestamp).reversed());
     }
 
     public void popular() {
-        if (posts.isEmpty()) {
-            posts = getPosts();
+        if (previews.isEmpty()) {
+            previews = getPreviews();
         }
-        posts.sort(Comparator.comparing(PostPreview::getCommentCount).reversed());
+        previews.sort(Comparator.comparing(PostPreview::getCommentCount).reversed());
     }
 
     public void best() {
-        if (posts.isEmpty()) {
-            posts = getPosts();
+        if (previews.isEmpty()) {
+            previews = getPreviews();
         }
-        posts.sort(Comparator.comparing(PostPreview::getLikeCount).reversed());
+        previews.sort(Comparator.comparing(PostPreview::getLikeCount).reversed());
     }
 
     public void early() {
-        if (posts.isEmpty()) {
-            posts = getPosts();
+        if (previews.isEmpty()) {
+            previews = getPreviews();
         }
-        posts.sort(Comparator.comparing(PostPreview::getTimestamp));
+        previews.sort(Comparator.comparing(PostPreview::getTimestamp));
     }
 
     public void search(String query) {
-        posts.clear();
+        previews.clear();
         count = 0;
         long time = System.currentTimeMillis();
-        postsRepository.findAll().forEach(post -> {
+        posts.forEach(post -> {
             long postTime = post.getTime().getTime();
             if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED && time > postTime) {
                 String text = post.getTitle() + post.getText();
@@ -98,11 +91,11 @@ public class PostsService {
     }
 
     public void byDate(String date) {
-        posts.clear();
+        previews.clear();
         count = 0;
         long time = System.currentTimeMillis();
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-        postsRepository.findAll().forEach(post -> {
+        posts.forEach(post -> {
             long postTime = post.getTime().getTime();
             if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED && time > postTime) {
                 String postDate = format.format(post.getTime());
@@ -113,11 +106,11 @@ public class PostsService {
         });
     }
 
-    public void byTag(String tag) {
-        posts.clear();
+    public void byTag(Tag tag) {
+        previews.clear();
         count = 0;
         long time = System.currentTimeMillis();
-        List<Post> list = tagsRepository.findByName(tag).getPosts();
+        List<Post> list = tag.getPosts();
         for (Post post : list) {
             long postTime = post.getTime().getTime();
             if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED && time > postTime) {
@@ -137,7 +130,7 @@ public class PostsService {
         preview.setViewCount(post.getViewCount());
         PostPreview postPreview = new PostPreview();
         postPreview.getCopy(preview);
-        posts.add(postPreview);
+        previews.add(postPreview);
         count++;
     }
 
