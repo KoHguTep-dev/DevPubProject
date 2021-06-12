@@ -26,6 +26,6 @@ public class PostVote {
     @Column(nullable = false)
     private Date time;
 
-    @Column(nullable = false) @Type(type = "byte")
-    private int value;
+    @Column(nullable = false)
+    private byte value;
 }

@@ -1,12 +1,11 @@
 package main.api.response.register;
 
 import lombok.Getter;
-import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter @Setter
+@Getter
 public class RegisterResponse {
 
     private boolean result = true;

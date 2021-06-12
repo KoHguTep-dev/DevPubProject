@@ -47,6 +47,12 @@ public class Post {
     inverseJoinColumns = {@JoinColumn(name = "tag_id")})
     private List<Tag> tags;
 
+    @OneToMany(mappedBy = "postId", fetch = FetchType.LAZY)
+    private List<PostVote> postVotes;
+
+    @OneToMany(mappedBy = "postId", fetch = FetchType.LAZY)
+    private List<PostComment> postComments;
+
     public Post() {
         moderationStatus = ModerationStatus.NEW;
     }

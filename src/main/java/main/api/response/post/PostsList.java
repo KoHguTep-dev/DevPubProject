@@ -1,5 +1,6 @@
 package main.api.response.post;
 
+import lombok.Getter;
 import lombok.Setter;
 import main.api.response.user.UserBasic;
 import main.model.ModerationStatus;
@@ -16,7 +17,7 @@ public class PostsList {
 
     @Setter
     private int count;
-    @Setter
+    @Getter
     private List<PostPreview> previews = new ArrayList<>();
 
     public static List<Post> posts;
@@ -29,12 +30,12 @@ public class PostsList {
 
     public int getCount() {
         if (count == 0) {
-            getPreviews();
+            setPreviews();
         }
         return count;
     }
 
-    public List<PostPreview> getPreviews() {
+    public List<PostPreview> setPreviews() {
         if (previews.isEmpty()) {
             long time = System.currentTimeMillis();
             posts.forEach(post -> {
@@ -50,27 +51,27 @@ public class PostsList {
     public void recent() {
         previews.clear();
         count = 0;
-        previews = getPreviews();
+        previews = setPreviews();
         previews.sort(Comparator.comparing(PostPreview::getTimestamp).reversed());
     }
 
     public void popular() {
         if (previews.isEmpty()) {
-            previews = getPreviews();
+            previews = setPreviews();
         }
         previews.sort(Comparator.comparing(PostPreview::getCommentCount).reversed());
     }
 
     public void best() {
         if (previews.isEmpty()) {
-            previews = getPreviews();
+            previews = setPreviews();
         }
         previews.sort(Comparator.comparing(PostPreview::getLikeCount).reversed());
     }
 
     public void early() {
         if (previews.isEmpty()) {
-            previews = getPreviews();
+            previews = setPreviews();
         }
         previews.sort(Comparator.comparing(PostPreview::getTimestamp));
     }
@@ -125,8 +126,8 @@ public class PostsList {
         preview.setUser(new UserBasic(post.getUser().getId(), post.getUser().getName()));
         preview.setTitle(post.getTitle());
         preview.setAnnounce(post.getText());
-        preview.setVotes(post.getId());
-        preview.setCommentCount(post.getId());
+        preview.setVotes(post);
+        preview.setCommentCount(post.getPostComments().size());
         preview.setViewCount(post.getViewCount());
         PostPreview postPreview = new PostPreview();
         postPreview.getCopy(preview);

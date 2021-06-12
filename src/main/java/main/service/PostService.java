@@ -6,8 +6,6 @@ import main.api.response.post.PostView;
 import main.api.response.post.PostsList;
 import main.model.Post;
 import main.model.Tag;
-import main.repository.PostCommentRepository;
-import main.repository.PostVotesRepository;
 import main.repository.PostsRepository;
 import main.repository.TagsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +18,6 @@ public class PostService {
     private PostsRepository postsRepository;
     @Autowired
     private TagsRepository tagsRepository;
-    @Autowired
-    private PostVotesRepository voteRepository;
-    @Autowired
-    private PostCommentRepository commentRepository;
 
     public PostResponse postResponse(int offset, int limit, String mode) {
         PostResponse postResponse = new PostResponse(postsList());
@@ -51,36 +45,22 @@ public class PostService {
     }
 
     public PostsList postsList() {
-        if (PostsList.posts == null) {
-            PostsList.posts = postsRepository.findAll();
-        }
+        PostsList.posts = postsRepository.findAll();
         PostsList postsList = new PostsList(postPreview());
         postsList.getCount();
         return postsList;
     }
 
     public PostPreview postPreview() {
-        if (PostPreview.postComments == null && PostPreview.postVotes == null) {
-            PostPreview.postComments = commentRepository.findAll();
-            PostPreview.postVotes = voteRepository.findAll();
-        }
         return new PostPreview();
     }
 
     public PostView getPost(int id) {
-        if (postsRepository.findById(id).isPresent()) {
-            PostView postView = new PostView();
-
+        if (postsRepository.existsById(id)) {
             Post post = postsRepository.findById(id).get();
-            PostView.postVotes = voteRepository.findAll();
-            PostView.postComments = commentRepository.findAll();
-
-            postView.get(id, post);
-
-//            post.setViewCount(postView.getViewCount() + 1);
-//            postsRepository.save(post);
-//            postsRepository.addViewCount(id);
-
+            PostView postView = new PostView();
+            postView.get(post);
+            postsRepository.addViewCount(id);
             return postView;
         }
         return null;

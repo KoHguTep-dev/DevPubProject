@@ -2,9 +2,3 @@ spring.datasource.url: jdbc:mysql://localhost:3306/devpub
 spring.datasource.username: root
 spring.datasource.password: 1234
 spring.jpa.hibernate.ddl-auto: validate
-blog.title: DevelopmentPublication
-blog.subtitle: Рассказы разработчиков
-blog.phone: +7 999 666-44-55
-blog.email: yandex@mail.ru
-blog.copyright: Макаренко Павел
-blog.copyrightFrom: 2020

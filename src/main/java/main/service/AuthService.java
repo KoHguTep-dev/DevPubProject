@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.List;
 
 @Service
 public class AuthService {
@@ -28,7 +27,7 @@ public class AuthService {
 
     public CaptchaResponse captchaResponse() {
         CaptchaResponse captcha = new CaptchaResponse();
-        String code = captcha.getCaptcha();
+        String code = captcha.get();
 
         CaptchaCode captchaCode = new CaptchaCode();
         captchaCode.setTime(new Date());
@@ -48,19 +47,12 @@ public class AuthService {
     public RegisterResponse registerResponse(RegisterRequest request) {
         RegisterResponse response = new RegisterResponse();
 
-        String email = request.getEmail();
-        String name = request.getName();
-
-        List<User> users = userRepository.findAll();
-        users.forEach(u -> {
-            if (u.getEmail().equals(email)) {
-                response.addEmailError();
-            }
-            if (u.getName().equals(name)) {
-                response.addNameError();
-            }
-        });
-
+        if (userRepository.findByName(request.getName()) != null || request.getName().matches("\\W*")) {
+            response.addNameError();
+        }
+        if (userRepository.findByEmail(request.getEmail()) != null) {
+            response.addEmailError();
+        }
         if (request.getPassword().length() < 6) {
             response.addPassError();
         }

@@ -1,68 +1,68 @@
---liquibase formatted sql
+-- liquibase formatted sql
 
---changeset root:1621535486452-1
+-- changeset root:1623256467649-1
 CREATE TABLE captcha_codes (id INT AUTO_INCREMENT NOT NULL, code VARCHAR(255) NOT NULL, secret_code VARCHAR(255) NOT NULL, time datetime NOT NULL, CONSTRAINT PK_CAPTCHA_CODES PRIMARY KEY (id));
 
---changeset root:1621535486452-2
+-- changeset root:1623256467649-2
 CREATE TABLE global_settings (id INT AUTO_INCREMENT NOT NULL, code VARCHAR(255) NOT NULL, name VARCHAR(255) NOT NULL, value VARCHAR(255) NOT NULL, CONSTRAINT PK_GLOBAL_SETTINGS PRIMARY KEY (id));
 
---changeset root:1621535486452-3
+-- changeset root:1623256467649-3
 CREATE TABLE post_comments (id INT AUTO_INCREMENT NOT NULL, parent_id INT NULL, text LONGTEXT NOT NULL, time datetime NOT NULL, post_id INT NOT NULL, user_id INT NOT NULL, CONSTRAINT PK_POST_COMMENTS PRIMARY KEY (id));
 
---changeset root:1621535486452-4
+-- changeset root:1623256467649-4
 CREATE TABLE post_votes (id INT AUTO_INCREMENT NOT NULL, time datetime NOT NULL, value TINYINT(3) NOT NULL, post_id INT NOT NULL, user_id INT NOT NULL, CONSTRAINT PK_POST_VOTES PRIMARY KEY (id));
 
---changeset root:1621535486452-5
+-- changeset root:1623256467649-5
 CREATE TABLE posts (id INT AUTO_INCREMENT NOT NULL, is_active BIT(1) NOT NULL, moderation_status ENUM('DECLINED', 'ACCEPTED', 'NEW') NOT NULL, moderator_id INT NULL, text MEDIUMTEXT NOT NULL, time datetime NOT NULL, title VARCHAR(255) NOT NULL, view_count INT NOT NULL, user_id INT NOT NULL, CONSTRAINT PK_POSTS PRIMARY KEY (id));
 
---changeset root:1621535486452-6
+-- changeset root:1623256467649-6
 CREATE TABLE tag2post (id INT AUTO_INCREMENT NOT NULL, post_id INT NOT NULL, tag_id INT NOT NULL, CONSTRAINT PK_TAG2POST PRIMARY KEY (id));
 
---changeset root:1621535486452-7
+-- changeset root:1623256467649-7
 CREATE TABLE tags (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(255) NOT NULL, CONSTRAINT PK_TAGS PRIMARY KEY (id));
 
---changeset root:1621535486452-8
+-- changeset root:1623256467649-8
 CREATE TABLE users (id INT AUTO_INCREMENT NOT NULL, code VARCHAR(255) NULL, email VARCHAR(255) NOT NULL, is_moderator BIT(1) NOT NULL, name VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, photo LONGTEXT NULL, reg_time datetime NOT NULL, CONSTRAINT PK_USERS PRIMARY KEY (id));
 
---changeset root:1621535486452-9
+-- changeset root:1623256467649-9
 CREATE INDEX FK5lidm6cqbc7u4xhqpxm898qme ON posts(user_id);
 
---changeset root:1621535486452-10
+-- changeset root:1623256467649-10
 CREATE INDEX FK9jh5u17tmu1g7xnlxa77ilo3u ON post_votes(post_id);
 
---changeset root:1621535486452-11
+-- changeset root:1623256467649-11
 CREATE INDEX FK9q09ho9p8fmo6rcysnci8rocc ON post_votes(user_id);
 
---changeset root:1621535486452-12
+-- changeset root:1623256467649-12
 CREATE INDEX FKaawaqxjs3br8dw5v90w7uu514 ON post_comments(post_id);
 
---changeset root:1621535486452-13
+-- changeset root:1623256467649-13
 CREATE INDEX FKjou6suf2w810t2u3l96uasw3r ON tag2post(tag_id);
 
---changeset root:1621535486452-14
+-- changeset root:1623256467649-14
 CREATE INDEX FKpjoedhh4h917xf25el3odq20i ON tag2post(post_id);
 
---changeset root:1621535486452-15
+-- changeset root:1623256467649-15
 CREATE INDEX FKsnxoecngu89u3fh4wdrgf0f2g ON post_comments(user_id);
 
---changeset root:1621535486452-16
+-- changeset root:1623256467649-16
 ALTER TABLE posts ADD CONSTRAINT FK5lidm6cqbc7u4xhqpxm898qme FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
---changeset root:1621535486452-17
+-- changeset root:1623256467649-17
 ALTER TABLE post_votes ADD CONSTRAINT FK9jh5u17tmu1g7xnlxa77ilo3u FOREIGN KEY (post_id) REFERENCES posts (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
---changeset root:1621535486452-18
+-- changeset root:1623256467649-18
 ALTER TABLE post_votes ADD CONSTRAINT FK9q09ho9p8fmo6rcysnci8rocc FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
---changeset root:1621535486452-19
+-- changeset root:1623256467649-19
 ALTER TABLE post_comments ADD CONSTRAINT FKaawaqxjs3br8dw5v90w7uu514 FOREIGN KEY (post_id) REFERENCES posts (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
---changeset root:1621535486452-20
+-- changeset root:1623256467649-20
 ALTER TABLE tag2post ADD CONSTRAINT FKjou6suf2w810t2u3l96uasw3r FOREIGN KEY (tag_id) REFERENCES tags (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
---changeset root:1621535486452-21
+-- changeset root:1623256467649-21
 ALTER TABLE tag2post ADD CONSTRAINT FKpjoedhh4h917xf25el3odq20i FOREIGN KEY (post_id) REFERENCES posts (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
---changeset root:1621535486452-22
+-- changeset root:1623256467649-22
 ALTER TABLE post_comments ADD CONSTRAINT FKsnxoecngu89u3fh4wdrgf0f2g FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 

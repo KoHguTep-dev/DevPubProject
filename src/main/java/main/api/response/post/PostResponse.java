@@ -65,7 +65,7 @@ public class PostResponse {
         posts.clear();
         count = postsList.getCount();
         int off = offset;
-        for (int i = 0; i <= limit; i++) {
+        for (int i = 0; i < limit; i++) {
             posts.add(i, postsList.getPreviews().get(off++));
             if (count - (off + 1) < 0) {
                 break;

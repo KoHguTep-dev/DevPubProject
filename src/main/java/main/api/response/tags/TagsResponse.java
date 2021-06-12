@@ -52,8 +52,10 @@ public class TagsResponse {
     }
 
     public void setCount() {
+        long time = System.currentTimeMillis();
         for (Post post : posts) {
-            if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED) {
+            long postTime = post.getTime().getTime();
+            if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED && time > postTime) {
                 count++;
             }
         }

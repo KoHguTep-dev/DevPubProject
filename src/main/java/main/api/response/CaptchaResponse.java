@@ -13,7 +13,7 @@ public class CaptchaResponse {
     private String secret;
     private String image;
 
-    public String getCaptcha() {
+    public String get() {
         GCage gCage = new GCage();
         String text = gCage.getTokenGenerator().next();
         byte[] bytes = gCage.draw(text);

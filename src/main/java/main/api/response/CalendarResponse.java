@@ -39,7 +39,7 @@ public class CalendarResponse {
                     calendar.setTime(post.getTime());
                     years.add(calendar.get(Calendar.YEAR));
                     String date = format.format(calendar.getTime());
-                    posts.put(date, posts.get(date) == null ? 1 : + 1);
+                    posts.put(date, posts.get(date) == null ? 1 : (posts.get(date) + 1));
                 }
             });
         }
