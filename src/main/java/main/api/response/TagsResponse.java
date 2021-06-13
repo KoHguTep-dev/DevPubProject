@@ -1,9 +1,10 @@
-package main.api.response.tags;
+package main.api.response;
 
 import lombok.Setter;
-import main.model.ModerationStatus;
-import main.model.Post;
-import main.model.Tag;
+import main.model.enums.ModerationStatus;
+import main.model.dto.TagWithWeight;
+import main.model.entities.Post;
+import main.model.entities.Tag;
 
 import java.util.ArrayList;
 import java.util.List;

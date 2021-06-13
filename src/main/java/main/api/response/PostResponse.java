@@ -1,8 +1,10 @@
-package main.api.response.post;
+package main.api.response;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.model.Tag;
+import main.model.dto.PostPreview;
+import main.model.dto.PostsList;
+import main.model.entities.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +58,13 @@ public class PostResponse {
 
     public void byTag(int offset, int limit, Tag tag) {
         postsList.byTag(tag);
+        if (!postsList.getPreviews().isEmpty()) {
+            toPage(offset, limit);
+        }
+    }
+
+    public void getMy(int offset, int limit, String status) {
+        postsList.myPosts(status);
         if (!postsList.getPreviews().isEmpty()) {
             toPage(offset, limit);
         }

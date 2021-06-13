@@ -1,12 +1,9 @@
-package main.api.response.post;
+package main.model.dto;
 
 import lombok.Getter;
-import main.api.response.Comment;
-import main.api.response.user.UserBasic;
-import main.api.response.user.UserComment;
-import main.model.ModerationStatus;
-import main.model.Post;
-import main.model.User;
+import main.model.enums.ModerationStatus;
+import main.model.entities.Post;
+import main.model.entities.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,18 +24,16 @@ public class PostView {
     private List<String> tags = new ArrayList<>();
 
     public void get(Post post) {
-        if (isAllowed(post)) {
-            this.id = post.getId();
-            timestamp = post.getTime().getTime() / 1000;
-            active = post.isActive();
-            user = new UserBasic(post.getUser().getId(), post.getUser().getName());
-            title = post.getTitle();
-            text = post.getText();
-            setVotes(post);
-            viewCount = post.getViewCount();
-            setComments(post);
-            post.getTags().forEach(tag -> tags.add(tag.getName()));
-        }
+        this.id = post.getId();
+        timestamp = post.getTime().getTime() / 1000;
+        active = post.isActive();
+        user = new UserBasic(post.getUser().getId(), post.getUser().getName());
+        title = post.getTitle();
+        text = post.getText();
+        setVotes(post);
+        viewCount = post.getViewCount();
+        setComments(post);
+        post.getTags().forEach(tag -> tags.add(tag.getName()));
     }
 
     private void setVotes(Post post) {
@@ -67,7 +62,7 @@ public class PostView {
         });
     }
 
-    private boolean isAllowed(Post post) {
+    public boolean isAllowed(Post post) {
         long time = System.currentTimeMillis();
         long postTime = post.getTime().getTime();
         return post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED && time > postTime;

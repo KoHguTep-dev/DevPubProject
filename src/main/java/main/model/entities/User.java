@@ -1,8 +1,9 @@
-package main.model;
+package main.model.entities;
 
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -34,4 +35,9 @@ public class User {
 
     @Type(type = "text")
     private String photo;
+
+    public String calculatePassword(String password) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        return passwordEncoder.encode(password);
+    }
 }

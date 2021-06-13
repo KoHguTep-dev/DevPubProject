@@ -1,8 +1,7 @@
-package main.api.response;
+package main.model.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.api.response.user.UserComment;
 
 @Getter @Setter
 public class Comment {

@@ -1,15 +1,21 @@
 package main.service;
 
+import main.api.request.LoginRequest;
 import main.api.request.RegisterRequest;
 import main.api.response.AuthResponse;
 import main.api.response.CaptchaResponse;
-import main.api.response.register.RegisterResponse;
-import main.model.CaptchaCode;
-import main.model.User;
+import main.api.response.RegisterResponse;
+import main.model.dto.UserLogin;
+import main.model.entities.CaptchaCode;
+import main.model.entities.User;
+import main.model.enums.ModerationStatus;
 import main.repository.CaptchaCodeRepository;
+import main.repository.PostsRepository;
 import main.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import java.util.Date;
 
@@ -20,9 +26,21 @@ public class AuthService {
     private CaptchaCodeRepository captchaCodeRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PostsRepository postsRepository;
+    @Autowired
+    private AuthenticationManager manager;
 
-    public AuthResponse authResponse() {
-        return new AuthResponse();
+    public AuthResponse authCheckResponse(SessionConfig sessionConfig) {
+        AuthResponse authResponse = new AuthResponse();
+
+        String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
+        if (sessionConfig.getSessions().containsKey(sessionId)) {
+            User user = userRepository.findById(sessionConfig.getSessions().get(sessionId)).get();
+            authResponse.setResult(true);
+            authResponse.setUser(new UserLogin(user));
+        }
+        return authResponse;
     }
 
     public CaptchaResponse captchaResponse() {
@@ -66,10 +84,44 @@ public class AuthService {
             user.setRegTime(new Date());
             user.setName(request.getName());
             user.setEmail(request.getEmail());
-            user.setPassword(request.getPassword());
+            user.setPassword(user.calculatePassword(request.getPassword()));
             userRepository.save(user);
         }
         return response;
+    }
+
+    public AuthResponse authLoginResponse(LoginRequest loginRequest, SessionConfig sessionConfig) {
+        AuthResponse authResponse = new AuthResponse();
+        User user = userRepository.findByEmail(loginRequest.getEmail());
+        if (user == null) {
+            return authResponse;
+        }
+        if (authResponse.checkPass(user, loginRequest.getPassword())) {
+            if (user.isModerator()) {
+                authResponse.getUser().setModerationCount(
+                        (int) postsRepository.findAll().stream().filter
+                                (post -> post.getModerationStatus() == ModerationStatus.NEW).count());
+            }
+
+//            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+//                    loginRequest.getEmail(), loginRequest.getPassword());
+//            Authentication authentication = manager.authenticate(auth);
+//            SecurityContext securityContext = SecurityContextHolder.getContext();
+//            securityContext.setAuthentication(authentication);
+
+            String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
+            sessionConfig.getSessions().put(sessionId, user.getId());
+        }
+        return authResponse;
+    }
+
+    public AuthResponse authLogoutResponse(SessionConfig sessionConfig) {
+        AuthResponse authResponse = new AuthResponse();
+        authResponse.setResult(true);
+
+        String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
+        sessionConfig.getSessions().remove(sessionId);
+        return authResponse;
     }
 
 }

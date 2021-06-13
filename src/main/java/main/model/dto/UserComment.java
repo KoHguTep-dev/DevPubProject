@@ -1,4 +1,4 @@
-package main.api.response.user;
+package main.model.dto;
 
 import lombok.Getter;
 import lombok.Setter;

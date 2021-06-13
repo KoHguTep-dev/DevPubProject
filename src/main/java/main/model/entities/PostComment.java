@@ -1,4 +1,4 @@
-package main.model;
+package main.model.entities;
 
 import lombok.Getter;
 import lombok.Setter;

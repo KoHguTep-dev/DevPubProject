@@ -1,8 +1,8 @@
 package main.api.response;
 
 import lombok.Setter;
-import main.model.ModerationStatus;
-import main.model.Post;
+import main.model.enums.ModerationStatus;
+import main.model.entities.Post;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

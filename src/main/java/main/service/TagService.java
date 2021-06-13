@@ -1,7 +1,7 @@
 package main.service;
 
-import main.api.response.tags.TagWithWeight;
-import main.api.response.tags.TagsResponse;
+import main.model.dto.TagWithWeight;
+import main.api.response.TagsResponse;
 import main.repository.PostsRepository;
 import main.repository.TagsRepository;
 import org.springframework.beans.factory.annotation.Autowired;

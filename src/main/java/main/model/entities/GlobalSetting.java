@@ -1,22 +1,24 @@
-package main.model;
+package main.model.entities;
 
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Getter @Setter
 @Entity
-@Table(name = "tags")
-public class Tag {
+@Table(name = "global_settings")
+public class GlobalSetting {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @Column(nullable = false)
+    private String code;
+
+    @Column(nullable = false)
     private String name;
 
-    @ManyToMany(mappedBy = "tags")
-    private List<Post> posts;
+    @Column(nullable = false)
+    private String value;
 }

@@ -1,8 +1,7 @@
-package main.model;
+package main.model.entities;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.Date;

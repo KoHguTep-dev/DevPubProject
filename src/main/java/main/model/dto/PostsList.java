@@ -1,11 +1,10 @@
-package main.api.response.post;
+package main.model.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.api.response.user.UserBasic;
-import main.model.ModerationStatus;
-import main.model.Post;
-import main.model.Tag;
+import main.model.enums.ModerationStatus;
+import main.model.entities.Post;
+import main.model.entities.Tag;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -118,6 +117,45 @@ public class PostsList {
                 addPreview(post, postTime);
             }
         }
+    }
+
+    public List<PostPreview> myPosts(String status) {
+        previews.clear();
+        count = 0;
+        switch (status) {
+            case "inactive":
+                posts.forEach(post -> {
+                    if (!post.isActive()) {
+                        addPreview(post, post.getTime().getTime());
+                    }
+                });
+                break;
+            case "pending":
+                posts.forEach(post -> {
+                    if (post.isActive() && post.getModerationStatus() == ModerationStatus.NEW) {
+                        addPreview(post, post.getTime().getTime());
+                    }
+                });
+                break;
+            case "declined":
+                posts.forEach(post -> {
+                    if (post.isActive() && post.getModerationStatus() == ModerationStatus.DECLINED) {
+                        addPreview(post, post.getTime().getTime());
+                    }
+                });
+                break;
+            case "published":
+                posts.forEach(post -> {
+                    if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED) {
+                        addPreview(post, post.getTime().getTime());
+                    }
+                });
+                break;
+            default:
+                posts.forEach(post -> addPreview(post, post.getTime().getTime()));
+        }
+        count = previews.size();
+        return previews;
     }
 
     private void addPreview(Post post, long time) {

@@ -1,9 +1,8 @@
-package main.api.response.post;
+package main.model.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.api.response.user.UserBasic;
-import main.model.Post;
+import main.model.entities.Post;
 
 @Getter
 public class PostPreview {

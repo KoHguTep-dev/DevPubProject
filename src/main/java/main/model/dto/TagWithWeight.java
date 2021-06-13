@@ -1,8 +1,8 @@
-package main.api.response.tags;
+package main.model.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import main.model.Tag;
+import main.model.entities.Tag;
 
 import java.util.ArrayList;
 import java.util.Comparator;

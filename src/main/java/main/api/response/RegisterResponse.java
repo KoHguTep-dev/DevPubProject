@@ -1,4 +1,4 @@
-package main.api.response.register;
+package main.api.response;
 
 import lombok.Getter;
 

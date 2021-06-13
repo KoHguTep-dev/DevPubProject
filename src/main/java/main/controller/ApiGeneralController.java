@@ -3,7 +3,7 @@ package main.controller;
 import main.api.response.CalendarResponse;
 import main.api.response.InitResponse;
 import main.api.response.SettingsResponse;
-import main.api.response.tags.TagsResponse;
+import main.api.response.TagsResponse;
 import main.service.CalendarService;
 import main.service.InitService;
 import main.service.SettingsService;
