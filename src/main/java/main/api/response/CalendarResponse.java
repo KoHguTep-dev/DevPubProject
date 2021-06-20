@@ -1,47 +1,35 @@
 package main.api.response;
 
+import lombok.Getter;
 import lombok.Setter;
-import main.model.enums.ModerationStatus;
-import main.model.entities.Post;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
+@Getter @Setter
 public class CalendarResponse {
 
-    @Setter
     private TreeSet<Integer> years = new TreeSet<>();
-    @Setter
     private TreeMap<String, Integer> posts = new TreeMap<>();
 
-    public static List<Post> postList;
-
-    public TreeSet<Integer> getYears() {
+    public TreeSet<Integer> getYears(List<Date> list) {
         if (years.isEmpty()) {
-            getPosts();
+            getPosts(list);
         }
         return years;
     }
 
-    public TreeMap<String, Integer> getPosts() {
+    public TreeMap<String, Integer> getPosts(List<Date> list) {
         if (posts.isEmpty()) {
-            long time = System.currentTimeMillis();
             Calendar calendar = Calendar.getInstance();
             DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-
-            postList.forEach(post -> {
-                long postTime = post.getTime().getTime();
-                if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED && time > postTime) {
-                    calendar.setTime(post.getTime());
-                    years.add(calendar.get(Calendar.YEAR));
-                    String date = format.format(calendar.getTime());
-                    posts.put(date, posts.get(date) == null ? 1 : (posts.get(date) + 1));
-                }
-            });
+            for (Date d : list) {
+                calendar.setTime(d);
+                years.add(calendar.get(Calendar.YEAR));
+                String date = format.format(calendar.getTime());
+                posts.put(date, posts.get(date) == null ? 1 : (posts.get(date) + 1));
+            }
         }
         return posts;
     }

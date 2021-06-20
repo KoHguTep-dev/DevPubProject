@@ -1,9 +1,8 @@
 package main.api.response;
 
+import lombok.Getter;
 import lombok.Setter;
-import main.model.enums.ModerationStatus;
 import main.model.dto.TagWithWeight;
-import main.model.entities.Post;
 import main.model.entities.Tag;
 
 import java.util.ArrayList;
@@ -11,25 +10,21 @@ import java.util.List;
 
 public class TagsResponse {
 
-    @Setter
+    @Getter @Setter
     private List<TagWithWeight> tags = new ArrayList<>();
     private double k;
+    @Setter
     private int count;
-
     private TagWithWeight tagWithWeight;
-    public static List<Tag> tagList;
-    public static List<Post> posts;
 
     public TagsResponse(TagWithWeight tagWithWeight) {
         this.tagWithWeight = tagWithWeight;
-        getTags();
     }
 
-    public List<TagWithWeight> getTags() {
+    public List<TagWithWeight> getTags(List<Tag> tagList) {
         if (tags.isEmpty()) {
-            setCount();
             if (k == 0) {
-                k = tagWithWeight.computeK(count);
+                k = tagWithWeight.computeK(count, tagList);
             }
             tagList.forEach(tag -> {
                 tagWithWeight.setName(tag.getName());
@@ -50,16 +45,6 @@ public class TagsResponse {
         weight.setWeight(1.0);
         tags.add(weight);
         return tags;
-    }
-
-    public void setCount() {
-        long time = System.currentTimeMillis();
-        for (Post post : posts) {
-            long postTime = post.getTime().getTime();
-            if (post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED && time > postTime) {
-                count++;
-            }
-        }
     }
 
 }

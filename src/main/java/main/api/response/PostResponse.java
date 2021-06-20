@@ -4,24 +4,49 @@ import lombok.Getter;
 import lombok.Setter;
 import main.model.dto.PostPreview;
 import main.model.dto.PostsList;
+import main.model.dto.UserBasic;
+import main.model.entities.Post;
 import main.model.entities.Tag;
+import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter @Setter
 public class PostResponse {
 
-    @Getter @Setter
-    private int count;
-    @Getter @Setter
+    private long count;
     private List<PostPreview> posts = new ArrayList<>();
 
-    private PostsList postsList;
+//    private PostsList postsList;
 
-    public PostResponse(PostsList postsList) {
-        this.postsList = postsList;
+//    public PostResponse(PostsList postsList) {
+//        this.postsList = postsList;
+//    }
+
+    public PostResponse(Page<Post> postPage) {
+        count = postPage.getTotalElements();
+        for (Post p : postPage) {
+            posts.add(postToPreview(p));
+        }
     }
 
+    private PostPreview postToPreview(Post post) {
+        PostPreview preview = new PostPreview();
+
+        preview.setId(post.getId());
+        preview.setTimestamp(post.getTime().getTime() / 1000);
+        preview.setUser(new UserBasic(post.getUser().getId(), post.getUser().getName()));
+        preview.setTitle(post.getTitle());
+        preview.setAnnounce(post.getText());
+        preview.setVotes(post);
+        preview.setCommentCount(post.getPostComments().size());
+        preview.setViewCount(post.getViewCount());
+
+        return preview;
+    }
+
+    /*
     public void addPosts(int offset, int limit, String mode) {
         switch (mode) {
             case "popular":
@@ -81,5 +106,7 @@ public class PostResponse {
             }
         }
     }
+
+     */
 
 }

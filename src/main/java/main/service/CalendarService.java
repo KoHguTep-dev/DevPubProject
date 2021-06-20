@@ -5,6 +5,9 @@ import main.repository.PostsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+import java.util.List;
+
 @Service
 public class CalendarService {
 
@@ -12,11 +15,10 @@ public class CalendarService {
     private PostsRepository postsRepository;
 
     public CalendarResponse calendarResponse() {
-        if (CalendarResponse.postList == null) {
-            CalendarResponse.postList = postsRepository.findAll();
-        }
+        List<Date> list = postsRepository.getAllPostTime(new Date());
+
         CalendarResponse calendarResponse = new CalendarResponse();
-        calendarResponse.getYears();
+        calendarResponse.getYears(list);
         return calendarResponse;
     }
 }

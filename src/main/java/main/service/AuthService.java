@@ -8,15 +8,20 @@ import main.api.response.RegisterResponse;
 import main.model.dto.UserLogin;
 import main.model.entities.CaptchaCode;
 import main.model.entities.User;
-import main.model.enums.ModerationStatus;
 import main.repository.CaptchaCodeRepository;
 import main.repository.PostsRepository;
 import main.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 
 @Service
@@ -31,16 +36,13 @@ public class AuthService {
     @Autowired
     private AuthenticationManager manager;
 
-    public AuthResponse authCheckResponse(SessionConfig sessionConfig) {
+    public AuthResponse authCheckResponse() {
         AuthResponse authResponse = new AuthResponse();
-
-        String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
-        if (sessionConfig.getSessions().containsKey(sessionId)) {
-            User user = userRepository.findById(sessionConfig.getSessions().get(sessionId)).get();
-            authResponse.setResult(true);
-            authResponse.setUser(new UserLogin(user));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.getPrincipal() == "anonymousUser") {
+            return authResponse;
         }
-        return authResponse;
+        return getAuthResponse(authentication);
     }
 
     public CaptchaResponse captchaResponse() {
@@ -53,22 +55,18 @@ public class AuthService {
         captchaCode.setSecretCode(captcha.getSecret());
         captchaCodeRepository.save(captchaCode);
 
-        long time = (System.currentTimeMillis()) - 3600_000;
-        captchaCodeRepository.findAll().forEach(c -> {
-            if (c.getTime().getTime() < time) {
-                captchaCodeRepository.delete(c);
-            }
-        });
+        Date date = new Date(System.currentTimeMillis() - 3600_000);
+        captchaCodeRepository.deleteOldCaptcha(date);
         return captcha;
     }
 
     public RegisterResponse registerResponse(RegisterRequest request) {
         RegisterResponse response = new RegisterResponse();
 
-        if (userRepository.findByName(request.getName()) != null || request.getName().matches("\\W*")) {
+        if (userRepository.findByName(request.getName()) != null || request.getName().matches(".*[^А-яёA-z0-9_]+")) {
             response.addNameError();
         }
-        if (userRepository.findByEmail(request.getEmail()) != null) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             response.addEmailError();
         }
         if (request.getPassword().length() < 6) {
@@ -90,37 +88,31 @@ public class AuthService {
         return response;
     }
 
-    public AuthResponse authLoginResponse(LoginRequest loginRequest, SessionConfig sessionConfig) {
-        AuthResponse authResponse = new AuthResponse();
-        User user = userRepository.findByEmail(loginRequest.getEmail());
-        if (user == null) {
-            return authResponse;
-        }
-        if (authResponse.checkPass(user, loginRequest.getPassword())) {
-            if (user.isModerator()) {
-                authResponse.getUser().setModerationCount(
-                        (int) postsRepository.findAll().stream().filter
-                                (post -> post.getModerationStatus() == ModerationStatus.NEW).count());
-            }
-
-//            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-//                    loginRequest.getEmail(), loginRequest.getPassword());
-//            Authentication authentication = manager.authenticate(auth);
-//            SecurityContext securityContext = SecurityContextHolder.getContext();
-//            securityContext.setAuthentication(authentication);
-
-            String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
-            sessionConfig.getSessions().put(sessionId, user.getId());
-        }
-        return authResponse;
+    public AuthResponse authLoginResponse(LoginRequest loginRequest) {
+        Authentication authentication = manager.authenticate(new UsernamePasswordAuthenticationToken(
+                loginRequest.getEmail(), loginRequest.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return getAuthResponse(authentication);
     }
 
-    public AuthResponse authLogoutResponse(SessionConfig sessionConfig) {
+    public AuthResponse authLogoutResponse(HttpServletRequest request, HttpServletResponse response) {
         AuthResponse authResponse = new AuthResponse();
         authResponse.setResult(true);
 
-        String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
-        sessionConfig.getSessions().remove(sessionId);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        new SecurityContextLogoutHandler().logout(request, response, authentication);
+        return authResponse;
+    }
+
+    private AuthResponse getAuthResponse(Authentication authentication) {
+        org.springframework.security.core.userdetails.User user = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+        User modelUser = userRepository.findByEmail(user.getUsername()).orElseThrow(() -> new UsernameNotFoundException(user.getUsername()));
+        AuthResponse authResponse = new AuthResponse();
+        authResponse.setResult(true);
+        authResponse.setUser(new UserLogin(modelUser));
+        if (modelUser.isModerator()) {
+            authResponse.getUser().setModerationCount(postsRepository.getCountForModeration());
+        }
         return authResponse;
     }
 

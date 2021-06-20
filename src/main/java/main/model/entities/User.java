@@ -2,6 +2,7 @@ package main.model.entities;
 
 import lombok.Getter;
 import lombok.Setter;
+import main.model.enums.Role;
 import org.hibernate.annotations.Type;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -39,5 +40,9 @@ public class User {
     public String calculatePassword(String password) {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         return passwordEncoder.encode(password);
+    }
+
+    public Role getRole() {
+        return isModerator ? Role.MODERATOR : Role.USER;
     }
 }

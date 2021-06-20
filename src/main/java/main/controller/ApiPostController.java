@@ -3,7 +3,6 @@ package main.controller;
 import main.api.response.PostResponse;
 import main.model.dto.PostView;
 import main.service.PostService;
-import main.service.SessionConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +15,6 @@ public class ApiPostController {
 
     @Autowired
     private PostService postService;
-    @Autowired
-    SessionConfig sessionConfig;
 
     @GetMapping("")
     @ResponseBody
@@ -58,7 +55,7 @@ public class ApiPostController {
     @GetMapping("/{ID}")
     @ResponseBody
     private ResponseEntity<PostView> getPost(@PathVariable(name = "ID") int id) {
-        PostView postView = postService.getPost(id, sessionConfig);
+        PostView postView = postService.getPost(id);
         if (postView == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
@@ -71,7 +68,7 @@ public class ApiPostController {
             @RequestParam("offset") int offset,
             @RequestParam("limit") int limit,
             @RequestParam("status") String status) {
-        return ResponseEntity.ok(postService.getMyPosts(offset, limit, status, sessionConfig));
+        return ResponseEntity.ok(postService.getMyPosts(offset, limit, status));
     }
 
 }

@@ -8,14 +8,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+@Getter @Setter
 public class TagWithWeight {
 
-    @Getter @Setter
     private String name;
-    @Getter @Setter
     private double weight;
-
-    public static List<Tag> tags;
 
     public void setWeight(Tag tag, double k, int count) {
         int tagCount = tag.getPosts().size();
@@ -27,7 +24,7 @@ public class TagWithWeight {
         weight = tag.weight;
     }
 
-    public double computeK(int count) {
+    public double computeK(int count, List<Tag> tags) {
         List<Integer> list = new ArrayList<>();
         tags.forEach(tag -> list.add(tag.getPosts().size()));
         list.sort(Comparator.reverseOrder());

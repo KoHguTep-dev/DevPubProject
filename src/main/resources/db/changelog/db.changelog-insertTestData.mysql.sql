@@ -9,7 +9,7 @@ values (1, 'MULTIUSER_MODE', 'Многопользовательский реж�
 --changeset root:1000-2
 insert into users (`id`, `is_moderator`, `reg_time`, `name`, `email`, `password`)
 values (1, 1, '2020-01-01 00:00:00', 'Администратор', 'ya@ya.ru', '$2y$10$xl9hJwWbC/fEN2D.Z5G/0.ElS4jJKCor3aeoqLOyqzm2/h7cMp0tK'),
-       (2, 0, '2020-05-05 12:15:15', 'Иван Иванов', 'ivavivan@ya.ru', '$2y$10$qEKKP3YaotODEKTry55.QuzvqLueD4.ZdmaqOFKht2wU.Zs1UBW5e'),
+       (2, 0, '2020-05-05 12:15:15', 'Иван_Иванов', 'ivavivan@ya.ru', '$2y$10$qEKKP3YaotODEKTry55.QuzvqLueD4.ZdmaqOFKht2wU.Zs1UBW5e'),
        (3, 0, '2020-05-05 13:15:15', 'Потрошитель3000', 'ripper@gmail.com', '$2y$10$ETnDzux1gNhCz6PfieAwD.LSWqowcvCNN44GmRFLGljuLZs/AxJle'),
        (4, 0, '2020-05-05 14:15:16', 'Dude', 'dude88@mail.ru', '$2y$10$xGRSBIktV6pGj2XBZRYlvuEOMoQiLq9EdSOevp1q0Q1nkgXQ5tdZe'),
        (5, 0, '2020-05-11 23:00:00', 'Петрович', 'petrovich@list.ru', '$2y$10$g573.wRZa50vWPoKVbUNMOz50Kzq5xCQ/zQqdpd65umfKUYWdFzqC');
