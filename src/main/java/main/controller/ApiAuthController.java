@@ -1,10 +1,10 @@
 package main.controller;
 
 import main.api.request.LoginRequest;
+import main.api.request.PasswordRequest;
+import main.api.request.PasswordRestoreRequest;
 import main.api.request.RegisterRequest;
-import main.api.response.CaptchaResponse;
-import main.api.response.AuthResponse;
-import main.api.response.RegisterResponse;
+import main.api.response.*;
 import main.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -50,4 +50,17 @@ public class ApiAuthController {
     private ResponseEntity<AuthResponse> logout(HttpServletRequest request, HttpServletResponse response) {
         return ResponseEntity.ok(authService.authLogoutResponse(request, response));
     }
+
+    @PostMapping("/restore")
+    @ResponseBody
+    private ResponseEntity<Boolean> passRestore(@RequestBody PasswordRestoreRequest email) {
+        return ResponseEntity.ok(authService.restorePassword(email));
+    }
+
+    @PostMapping("/password")
+    @ResponseBody
+    private ResponseEntity<PasswordResponse> password(@RequestBody PasswordRequest request) {
+        return ResponseEntity.ok(authService.replacePassword(request));
+    }
+
 }

@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
@@ -22,12 +23,15 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
     void addViewCount(@Param("id") int id);
 
     @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
-    Page<Post> findAllAvailable(Date time, Pageable pageable);
+    Page<Post> findAvailablePosts(Date time, Pageable pageable);
+
+    @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
+    Page<Post> findAvailablePostsBest(Date time, Pageable pageable);
 
     @Query("select count(*) from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
     int getCountAllAvailable(Date time);
 
-    @Query("select count(*) from Post p where p.moderationStatus = 'NEW'")
+    @Query("select count(*) from Post p where p.isActive = true and p.moderationStatus = 'NEW'")
     int getCountForModeration();
 
     @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time and title like %:query% or text like %:query%")
@@ -38,9 +42,6 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
 
     @Query("select time from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
     List<Date> getAllPostTime(Date time);
-
-    @Query("select p from Post p where p.user = :user")
-    Page<Post> findByUser(User user, Pageable pageable);
 
     @Query("select p from Post p where p.user = :user and p.isActive = false")
     Page<Post> findByUserInactive(User user, Pageable pageable);
@@ -53,5 +54,29 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
 
     @Query("select p from Post p where p.user = :user and p.isActive = true and p.moderationStatus = 'ACCEPTED'")
     Page<Post> findByUserPublished(User user, Pageable pageable);
+
+    @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'NEW'")
+    Page<Post> findByModeratorNew(Pageable pageable);
+
+    @Query("select p from Post p where p.moderatorId = :id and p.isActive = true and p.moderationStatus = 'DECLINED'")
+    Page<Post> findByModeratorDeclined(int id, Pageable pageable);
+
+    @Query("select p from Post p where p.moderatorId = :id and p.isActive = true and p.moderationStatus = 'ACCEPTED'")
+    Page<Post> findByModeratorAccepted(int id, Pageable pageable);
+
+    @Query("select count(*) from Post p where p.user = :user and p.isActive = true and p.moderationStatus = 'ACCEPTED'")
+    int getPostCountByUser(User user);
+
+    @Query("select sum(p.viewCount) from Post p where p.user = :user and p.isActive = true and p.moderationStatus = 'ACCEPTED'")
+    int getViewCountByUser(User user);
+
+    @Query("select min(p.time) from Post p where p.user = :user and p.isActive = true and p.moderationStatus = 'ACCEPTED'")
+    Timestamp findFirstByUser(User user);
+
+    @Query("select sum(p.viewCount) from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED'")
+    int getViewCount();
+
+    @Query("select min(p.time) from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED'")
+    Timestamp findFirst();
 
 }

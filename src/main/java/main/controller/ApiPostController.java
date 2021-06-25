@@ -1,6 +1,9 @@
 package main.controller;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import main.api.request.PostRequest;
 import main.api.response.PostResponse;
+import main.api.response.PostsResponse;
 import main.model.dto.PostView;
 import main.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +21,7 @@ public class ApiPostController {
 
     @GetMapping("")
     @ResponseBody
-    private ResponseEntity<PostResponse> getPosts(
+    private ResponseEntity<PostsResponse> getPosts(
             @RequestParam("offset") int offset,
             @RequestParam("limit") int limit,
             @RequestParam("mode") String mode) {
@@ -27,7 +30,7 @@ public class ApiPostController {
 
     @GetMapping("/search")
     @ResponseBody
-    private ResponseEntity<PostResponse> getSearch(
+    private ResponseEntity<PostsResponse> getSearch(
             @RequestParam("offset") int offset,
             @RequestParam("limit") int limit,
             @RequestParam("query") String query) {
@@ -36,7 +39,7 @@ public class ApiPostController {
 
     @GetMapping("/byDate")
     @ResponseBody
-    private ResponseEntity<PostResponse> getByDate(
+    private ResponseEntity<PostsResponse> getByDate(
             @RequestParam("offset") int offset,
             @RequestParam("limit") int limit,
             @RequestParam("date") String date) {
@@ -45,7 +48,7 @@ public class ApiPostController {
 
     @GetMapping("/byTag")
     @ResponseBody
-    private ResponseEntity<PostResponse> getByTag(
+    private ResponseEntity<PostsResponse> getByTag(
             @RequestParam("offset") int offset,
             @RequestParam("limit") int limit,
             @RequestParam("tag") String tag) {
@@ -64,11 +67,44 @@ public class ApiPostController {
 
     @GetMapping("/my")
     @ResponseBody
-    private ResponseEntity<PostResponse> getMy(
+    private ResponseEntity<PostsResponse> getMy(
             @RequestParam("offset") int offset,
             @RequestParam("limit") int limit,
             @RequestParam("status") String status) {
         return ResponseEntity.ok(postService.getMyPosts(offset, limit, status));
+    }
+
+    @PostMapping("")
+    @ResponseBody
+    private ResponseEntity<PostResponse> addPost(@RequestBody PostRequest request) {
+        return ResponseEntity.ok(postService.addPost(request));
+    }
+
+    @PutMapping("/{ID}")
+    @ResponseBody
+    private ResponseEntity<PostResponse> putPost(@PathVariable(name = "ID") int id, @RequestBody PostRequest request) {
+        return ResponseEntity.ok(postService.putPost(request, id));
+    }
+
+    @PostMapping("/like")
+    @ResponseBody
+    private ResponseEntity<Boolean> like(@RequestBody @JsonProperty("post_id") String postId) {
+        return ResponseEntity.ok(postService.like(postId));
+    }
+
+    @PostMapping("/dislike")
+    @ResponseBody
+    private ResponseEntity<Boolean> dislike(@RequestBody @JsonProperty("post_id") String postId) {
+        return ResponseEntity.ok(postService.dislike(postId));
+    }
+
+    @GetMapping("/moderation")
+    @ResponseBody
+    private ResponseEntity<PostsResponse> moderationList(
+            @RequestParam("offset") int offset,
+            @RequestParam("limit") int limit,
+            @RequestParam("status") String status) {
+        return ResponseEntity.ok(postService.moderationList(offset, limit, status));
     }
 
 }

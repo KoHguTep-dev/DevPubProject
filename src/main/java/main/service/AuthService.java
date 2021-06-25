@@ -1,24 +1,25 @@
 package main.service;
 
 import main.api.request.LoginRequest;
+import main.api.request.PasswordRequest;
+import main.api.request.PasswordRestoreRequest;
 import main.api.request.RegisterRequest;
-import main.api.response.AuthResponse;
-import main.api.response.CaptchaResponse;
-import main.api.response.RegisterResponse;
+import main.api.response.*;
 import main.model.dto.UserLogin;
 import main.model.entities.CaptchaCode;
 import main.model.entities.User;
 import main.repository.CaptchaCodeRepository;
 import main.repository.PostsRepository;
 import main.repository.UserRepository;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -35,6 +36,8 @@ public class AuthService {
     private PostsRepository postsRepository;
     @Autowired
     private AuthenticationManager manager;
+    @Autowired
+    private EmailService emailService;
 
     public AuthResponse authCheckResponse() {
         AuthResponse authResponse = new AuthResponse();
@@ -104,9 +107,87 @@ public class AuthService {
         return authResponse;
     }
 
+    public ProfileResponse editProfile(MultipartFile photo, String name, String email, String password, Integer removePhoto) {
+        ProfileResponse response = new ProfileResponse();
+        User user = getUser();
+        if (user != null) {
+            if (email != null && userRepository.findByEmail(email).isPresent() &&
+                    !userRepository.findByEmail(email).get().equals(user)) {
+                response.addEmailError();
+            }
+            if (name != null && name.matches(".*[^А-яёA-z0-9_]+")) {
+                response.addNameError();
+            }
+            if (password != null && password.length() < 6) {
+                response.addPasswordError();
+            }
+            String avatar = ImageUtils.resizeUpload(photo);
+
+            if (response.getErrors().isEmpty()) {
+                if (name.length() != 0 && !user.getName().equals(name)) {
+                    user.setName(name);
+                }
+                if (email.length() != 0 && !user.getEmail().equals(email)) {
+                    user.setEmail(email);
+                }
+                if (password != null) {
+                    user.setPassword(user.calculatePassword(password));
+                }
+                if (removePhoto == 1) {
+                    user.setPhoto(null);
+                }
+                if (avatar != null) {
+                    user.setPhoto(avatar);
+                }
+                userRepository.save(user);
+            }
+        }
+        return response;
+    }
+
+    public boolean restorePassword(PasswordRestoreRequest mail) {
+        boolean result = false;
+        String email = mail.getEmail();
+        if (!userRepository.findByEmail(email).isEmpty()) {
+            String hash = RandomStringUtils.randomAlphanumeric(64);
+            User user = userRepository.findByEmail(email).get();
+            user.setCode(hash);
+            userRepository.save(user);
+            String text = "/login/change-password/" + hash;
+            String subject = "Ссылка для восстановления пароля";
+            emailService.sendEmail(email, subject, text);
+            result = true;
+        }
+        return result;
+    }
+
+    public PasswordResponse replacePassword(PasswordRequest request) {
+        PasswordResponse response = new PasswordResponse();
+        if (request.getPassword().length() < 6) {
+            response.addPasswordError();
+        }
+        CaptchaCode captchaCode = captchaCodeRepository.findBySecretCode(request.getCaptchaSecret());
+        if (!captchaCode.getCode().equals(request.getCaptcha())) {
+            response.addCaptchaError();
+        }
+        if (userRepository.findByCode(request.getCode()).isEmpty()) {
+            response.addCodeError();
+        }
+        if (response.getErrors().isEmpty()) {
+            User user = userRepository.findByCode(request.getCode()).get();
+            user.setPassword(user.calculatePassword(request.getPassword()));
+            user.setCode(null);
+            userRepository.save(user);
+        }
+        return response;
+    }
+
     private AuthResponse getAuthResponse(Authentication authentication) {
-        org.springframework.security.core.userdetails.User user = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
-        User modelUser = userRepository.findByEmail(user.getUsername()).orElseThrow(() -> new UsernameNotFoundException(user.getUsername()));
+        var user = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+        if (userRepository.findByEmail(user.getUsername()).isEmpty()) {
+            return new AuthResponse();
+        }
+        User modelUser = userRepository.findByEmail(user.getUsername()).get();
         AuthResponse authResponse = new AuthResponse();
         authResponse.setResult(true);
         authResponse.setUser(new UserLogin(modelUser));
@@ -114,6 +195,16 @@ public class AuthService {
             authResponse.getUser().setModerationCount(postsRepository.getCountForModeration());
         }
         return authResponse;
+    }
+
+    private User getUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        try {
+            var securityUser = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+            return userRepository.findByEmail(securityUser.getUsername()).orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 }

@@ -1,11 +1,11 @@
 package main.api.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import lombok.Getter;
 
 import java.util.List;
 
-@Data
+@Getter
 public class SettingsResponse {
 
     @JsonProperty("MULTIUSER_MODE")
@@ -14,6 +14,8 @@ public class SettingsResponse {
     private boolean postPreModeration;
     @JsonProperty("STATISTICS_IS_PUBLIC")
     private boolean statisticsIsPublic;
+
+    public SettingsResponse() {}
 
     public SettingsResponse(List<String> list) {
         multiUserMode = parseBool(list.get(0));

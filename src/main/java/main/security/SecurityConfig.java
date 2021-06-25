@@ -1,6 +1,5 @@
 package main.security;
 
-import main.model.enums.Permission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,16 +22,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().authorizeRequests()
-//                .antMatchers(HttpMethod.GET, "/", "/api/init", "/api/settings", "/api/auth/check", "/api/post", "/api/tag").permitAll()
-//                .antMatchers("/", "/api/init").permitAll()
                 .antMatchers("/**").permitAll()
-//                .antMatchers(HttpMethod.GET, "/", "/api/init").permitAll()
-                .antMatchers("/api/post").hasAuthority(Permission.USER.getPermission())
-                .antMatchers("/api/post/*").hasAuthority(Permission.MODERATE.getPermission())
-                .anyRequest().authenticated()
                 .and().formLogin().disable()
-                .httpBasic()
-        ;
+                .httpBasic();
     }
 
     @Bean

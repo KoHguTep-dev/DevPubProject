@@ -1,19 +1,13 @@
 package main.controller;
 
-import main.api.response.CalendarResponse;
-import main.api.response.InitResponse;
-import main.api.response.SettingsResponse;
-import main.api.response.TagsResponse;
-import main.service.CalendarService;
-import main.service.InitService;
-import main.service.SettingsService;
-import main.service.TagService;
+import main.api.request.CommentRequest;
+import main.api.request.ModerationRequest;
+import main.api.response.*;
+import main.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api")
@@ -27,6 +21,10 @@ public class ApiGeneralController {
     private TagService tagService;
     @Autowired
     private CalendarService calendarService;
+    @Autowired
+    private PostService postService;
+    @Autowired
+    private AuthService authService;
 
     @GetMapping("/init")
     private ResponseEntity<InitResponse> init() {
@@ -46,6 +44,61 @@ public class ApiGeneralController {
     @GetMapping("/calendar")
     private ResponseEntity<CalendarResponse> getCalendar() {
         return ResponseEntity.ok(calendarService.calendarResponse());
+    }
+
+    @PostMapping("/comment")
+    @ResponseBody
+    private ResponseEntity<CommentResponse> addComment(@RequestBody CommentRequest request) {
+        CommentResponse response = postService.addComment(request);
+        if (response.getErrors().isEmpty()) {
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.badRequest().body(new CommentResponse());
+    }
+
+    @GetMapping("/statistics/my")
+    @ResponseBody
+    private ResponseEntity<StatisticsResponse> getStat() {
+        return ResponseEntity.ok(postService.statisticsByUser());
+    }
+
+    @GetMapping("/statistics/all")
+    @ResponseBody
+    private ResponseEntity<StatisticsResponse> getAllStat() {
+        SettingsResponse settings = settingsService.settingsResponse();
+        return ResponseEntity.ok(postService.statistics(settings));
+    }
+
+    @PostMapping("/image")
+    @ResponseBody
+    private ResponseEntity uploadImage(@RequestParam("image") MultipartFile image) {
+        String result = ImageUtils.upload(image);
+        if (result != null) {
+            return ResponseEntity.ok(result);
+        }
+        return ResponseEntity.badRequest().body(new ImageResponse());
+    }
+
+    @PostMapping("/profile/my")
+    @ResponseBody
+    private ResponseEntity<ProfileResponse> editProfile(
+            @RequestParam(value = "photo", required = false) MultipartFile photo,
+            @RequestParam(value = "name", required = false) String name, @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "password", required = false) String password, @RequestParam(value = "removePhoto", required = false) Integer removePhoto) {
+        return ResponseEntity.ok(authService.editProfile(photo, name, email, password, removePhoto));
+    }
+
+    @PostMapping("/moderation")
+    @ResponseBody
+    private ResponseEntity<Boolean> moderationPost(@RequestBody ModerationRequest request) {
+        return ResponseEntity.ok(postService.moderationPost(request));
+    }
+
+    @PutMapping("/settings")
+    @ResponseBody
+    private ResponseEntity setSettings(@RequestBody SettingsResponse request) {
+        settingsService.setSettings(request);
+        return ResponseEntity.ok(null);
     }
 
 }

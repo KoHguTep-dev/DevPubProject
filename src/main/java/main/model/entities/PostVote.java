@@ -27,4 +27,12 @@ public class PostVote {
 
     @Column(nullable = false)
     private byte value;
+
+    public PostVote() {}
+
+    public PostVote(Post post, User user) {
+        setUserId(user);
+        setPostId(post);
+        setTime(new Date());
+    }
 }
