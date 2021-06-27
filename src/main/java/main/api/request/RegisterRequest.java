@@ -2,6 +2,9 @@ package main.api.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import main.model.entities.User;
+
+import java.util.Date;
 
 @Getter
 public class RegisterRequest {
@@ -13,4 +16,13 @@ public class RegisterRequest {
     private String captcha;
     @JsonProperty("captcha_secret")
     private String captchaSecret;
+
+    public void toUser(User user) {
+        user.setModerator(false);
+        user.setRegTime(new Date());
+        user.setName(name);
+        user.setEmail(email);
+        user.setPassword(user.calculatePassword(password));
+    }
+
 }

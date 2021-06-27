@@ -1,11 +1,12 @@
 package main.controller;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import main.api.request.PostRequest;
+import main.api.request.VoteRequest;
 import main.api.response.PostResponse;
 import main.api.response.PostsResponse;
 import main.model.dto.PostView;
 import main.service.PostService;
+import main.service.SettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,8 @@ public class ApiPostController {
 
     @Autowired
     private PostService postService;
+    @Autowired
+    private SettingsService settingsService;
 
     @GetMapping("")
     @ResponseBody
@@ -77,7 +80,7 @@ public class ApiPostController {
     @PostMapping("")
     @ResponseBody
     private ResponseEntity<PostResponse> addPost(@RequestBody PostRequest request) {
-        return ResponseEntity.ok(postService.addPost(request));
+        return ResponseEntity.ok(postService.addPost(request, settingsService.settingsResponse()));
     }
 
     @PutMapping("/{ID}")
@@ -88,14 +91,14 @@ public class ApiPostController {
 
     @PostMapping("/like")
     @ResponseBody
-    private ResponseEntity<Boolean> like(@RequestBody @JsonProperty("post_id") String postId) {
-        return ResponseEntity.ok(postService.like(postId));
+    private ResponseEntity<Boolean> like(@RequestBody VoteRequest request) {
+        return ResponseEntity.ok(postService.like(request));
     }
 
     @PostMapping("/dislike")
     @ResponseBody
-    private ResponseEntity<Boolean> dislike(@RequestBody @JsonProperty("post_id") String postId) {
-        return ResponseEntity.ok(postService.dislike(postId));
+    private ResponseEntity<Boolean> dislike(@RequestBody VoteRequest request) {
+        return ResponseEntity.ok(postService.dislike(request));
     }
 
     @GetMapping("/moderation")

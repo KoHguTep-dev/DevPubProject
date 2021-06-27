@@ -4,9 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import main.model.entities.Tag;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Getter @Setter
 public class TagWithWeight {
@@ -14,8 +12,7 @@ public class TagWithWeight {
     private String name;
     private double weight;
 
-    public void setWeight(Tag tag, double k, int count) {
-        int tagCount = tag.getPosts().size();
+    public void setWeight(int tagCount, double k, int count) {
         weight = (double) tagCount / count * k;
     }
 
@@ -24,12 +21,10 @@ public class TagWithWeight {
         weight = tag.weight;
     }
 
-    public double computeK(int count, List<Tag> tags) {
-        List<Integer> list = new ArrayList<>();
-        tags.forEach(tag -> list.add(tag.getPosts().size()));
-        list.sort(Comparator.reverseOrder());
-        int value = list.get(0);
+    public double computeK(int count, Map<Tag, Integer> tagList) {
+        int value = Collections.max(tagList.values());
         double meta = (double) value / count;
         return 1 / meta;
     }
+
 }

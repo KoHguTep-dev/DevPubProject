@@ -9,10 +9,10 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class ImageUtils {
 
@@ -20,7 +20,7 @@ public class ImageUtils {
         String ext = FilenameUtils.getExtension(image.getOriginalFilename());
         byte[] bytes = getBytes(image, ext);
         if (bytes != null) {
-            return getPathAndWrite(ext, bytes);
+            return "/" + getPathAndWrite(ext, bytes);
         }
         return null;
     }
@@ -34,7 +34,7 @@ public class ImageUtils {
                 ByteArrayOutputStream bs = new ByteArrayOutputStream();
                 ImageIO.write(newImage, ext, bs);
                 byte[] newBytes = bs.toByteArray();
-                return getPathAndWrite(ext, newBytes);
+                return "/" + getPathAndWrite(ext, newBytes);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -43,8 +43,9 @@ public class ImageUtils {
     }
 
     private static byte[] getBytes(MultipartFile image, String ext) {
-        if (image.isEmpty())
+        if (ext == null) {
             return null;
+        }
         if (ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("png")) {
             try {
                 byte[] bytes = image.getBytes();
@@ -66,18 +67,23 @@ public class ImageUtils {
         String numbers = RandomStringUtils.randomNumeric(10);
 
         path.append("upload/")
-                .append(letters.substring(0, 2)).append("/")
-                .append(letters.substring(2, 4)).append("/")
+                .append(letters, 0, 2).append("/")
+                .append(letters, 2, 4).append("/")
                 .append(letters.substring(4)).append("/")
                 .append(numbers).append(".").append(ext);
-        Path file = Paths.get(path.toString());
-        try {
-            Files.createDirectories(file.getParent());
-            Files.write(file, bytes);
-        } catch (IOException e) {
-            e.printStackTrace();
+        Path file = Path.of(path.toString());
+        if (new File(path.toString()).isFile()) {
+            file = Path.of(getPathAndWrite(ext, bytes));
         }
-        return "/" + path;
+        if (!new File(path.toString()).isFile()) {
+            try {
+                Files.createDirectories(file.getParent());
+                Files.write(file, bytes);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return path.toString();
     }
 
 }

@@ -6,6 +6,7 @@ import main.api.request.PasswordRestoreRequest;
 import main.api.request.RegisterRequest;
 import main.api.response.*;
 import main.service.AuthService;
+import main.service.SettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -20,6 +21,8 @@ public class ApiAuthController {
 
     @Autowired
     private AuthService authService;
+    @Autowired
+    private SettingsService settingsService;
 
     @GetMapping("/check")
     @ResponseBody
@@ -36,7 +39,11 @@ public class ApiAuthController {
     @PostMapping("/register")
     @ResponseBody
     private ResponseEntity<RegisterResponse> addUser(@RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.registerResponse(request));
+        RegisterResponse response = authService.registerResponse(request, settingsService.settingsResponse());
+        if (response == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -47,7 +54,7 @@ public class ApiAuthController {
 
     @GetMapping("/logout")
     @ResponseBody
-    private ResponseEntity<AuthResponse> logout(HttpServletRequest request, HttpServletResponse response) {
+    private ResponseEntity<Boolean> logout(HttpServletRequest request, HttpServletResponse response) {
         return ResponseEntity.ok(authService.authLogoutResponse(request, response));
     }
 

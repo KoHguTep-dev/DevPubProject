@@ -1,9 +1,6 @@
 package main.service;
 
-import main.api.request.LoginRequest;
-import main.api.request.PasswordRequest;
-import main.api.request.PasswordRestoreRequest;
-import main.api.request.RegisterRequest;
+import main.api.request.*;
 import main.api.response.*;
 import main.model.dto.UserLogin;
 import main.model.entities.CaptchaCode;
@@ -63,9 +60,11 @@ public class AuthService {
         return captcha;
     }
 
-    public RegisterResponse registerResponse(RegisterRequest request) {
+    public RegisterResponse registerResponse(RegisterRequest request, SettingsResponse settings) {
+        if (!settings.isMultiUserMode()) {
+            return null;
+        }
         RegisterResponse response = new RegisterResponse();
-
         if (userRepository.findByName(request.getName()) != null || request.getName().matches(".*[^А-яёA-z0-9_]+")) {
             response.addNameError();
         }
@@ -81,11 +80,7 @@ public class AuthService {
         }
         if (response.getErrors().isEmpty()) {
             User user = new User();
-            user.setModerator(false);
-            user.setRegTime(new Date());
-            user.setName(request.getName());
-            user.setEmail(request.getEmail());
-            user.setPassword(user.calculatePassword(request.getPassword()));
+            request.toUser(user);
             userRepository.save(user);
         }
         return response;
@@ -98,16 +93,15 @@ public class AuthService {
         return getAuthResponse(authentication);
     }
 
-    public AuthResponse authLogoutResponse(HttpServletRequest request, HttpServletResponse response) {
-        AuthResponse authResponse = new AuthResponse();
-        authResponse.setResult(true);
+    public boolean authLogoutResponse(HttpServletRequest request, HttpServletResponse response) {
+        boolean result = true;
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         new SecurityContextLogoutHandler().logout(request, response, authentication);
-        return authResponse;
+        return result;
     }
 
-    public ProfileResponse editProfile(MultipartFile photo, String name, String email, String password, Integer removePhoto) {
+    public ProfileResponse editProfile(MultipartFile photo, String name, String email, String password, int removePhoto) {
         ProfileResponse response = new ProfileResponse();
         User user = getUser();
         if (user != null) {
@@ -121,23 +115,60 @@ public class AuthService {
             if (password != null && password.length() < 6) {
                 response.addPasswordError();
             }
-            String avatar = ImageUtils.resizeUpload(photo);
-
+            if (photo != null && photo.getSize() > 5242880) {
+                response.addPhotoError();
+            }
             if (response.getErrors().isEmpty()) {
-                if (name.length() != 0 && !user.getName().equals(name)) {
+                if (name != null && !user.getName().equals(name)) {
                     user.setName(name);
                 }
-                if (email.length() != 0 && !user.getEmail().equals(email)) {
+                if (email != null && !user.getEmail().equals(email)) {
                     user.setEmail(email);
                 }
                 if (password != null) {
                     user.setPassword(user.calculatePassword(password));
                 }
-                if (removePhoto == 1) {
-                    user.setPhoto(null);
+                if (removePhoto == 0 && photo != null) {
+                    user.setPhoto(ImageUtils.resizeUpload(photo));
                 }
-                if (avatar != null) {
-                    user.setPhoto(avatar);
+                userRepository.save(user);
+            }
+        }
+        return response;
+    }
+
+    public ProfileResponse editProfile(ProfileRequest request) {
+        ProfileResponse response = new ProfileResponse();
+        User user = getUser();
+        if (user != null) {
+            String email = request.getEmail();
+            String name = request.getName();
+            String password = request.getPassword();
+            String photo = request.getPhoto();
+            int removePhoto = request.getRemovePhoto();
+
+            if (email != null && userRepository.findByEmail(email).isPresent() &&
+                    !userRepository.findByEmail(email).get().equals(user)) {
+                response.addEmailError();
+            }
+            if (name != null && name.matches(".*[^А-яёA-z0-9_]+")) {
+                response.addNameError();
+            }
+            if (password != null && password.length() < 6) {
+                response.addPasswordError();
+            }
+            if (response.getErrors().isEmpty()) {
+                if (name != null && !user.getName().equals(name)) {
+                    user.setName(name);
+                }
+                if (email != null && !user.getEmail().equals(email)) {
+                    user.setEmail(email);
+                }
+                if (password != null) {
+                    user.setPassword(user.calculatePassword(password));
+                }
+                if (removePhoto == 1 && photo.equals("")) {
+                    user.setPhoto(null);
                 }
                 userRepository.save(user);
             }
@@ -148,7 +179,7 @@ public class AuthService {
     public boolean restorePassword(PasswordRestoreRequest mail) {
         boolean result = false;
         String email = mail.getEmail();
-        if (!userRepository.findByEmail(email).isEmpty()) {
+        if (userRepository.findByEmail(email).isPresent()) {
             String hash = RandomStringUtils.randomAlphanumeric(64);
             User user = userRepository.findByEmail(email).get();
             user.setCode(hash);

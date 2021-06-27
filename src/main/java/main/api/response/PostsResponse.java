@@ -33,7 +33,7 @@ public class PostsResponse {
         preview.setTimestamp(post.getTime().getTime() / 1000);
         preview.setUser(new UserBasic(post.getUser().getId(), post.getUser().getName()));
         preview.setTitle(post.getTitle());
-        preview.setAnnounce(post.getText());
+        preview.setAnnounce(preview.formatText(post.getText()));
         preview.setVotes(post);
         preview.setCommentCount(post.getPostComments().size());
         preview.setViewCount(post.getViewCount());

@@ -2,9 +2,11 @@ package main.controller;
 
 import main.api.request.CommentRequest;
 import main.api.request.ModerationRequest;
+import main.api.request.ProfileRequest;
 import main.api.response.*;
 import main.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -59,33 +61,48 @@ public class ApiGeneralController {
     @GetMapping("/statistics/my")
     @ResponseBody
     private ResponseEntity<StatisticsResponse> getStat() {
-        return ResponseEntity.ok(postService.statisticsByUser());
+        StatisticsResponse response = postService.statisticsByUser();
+        if (response == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/statistics/all")
     @ResponseBody
     private ResponseEntity<StatisticsResponse> getAllStat() {
-        SettingsResponse settings = settingsService.settingsResponse();
-        return ResponseEntity.ok(postService.statistics(settings));
+        StatisticsResponse response = postService.statistics(settingsService.settingsResponse());
+        if (response == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/image")
     @ResponseBody
     private ResponseEntity uploadImage(@RequestParam("image") MultipartFile image) {
-        String result = ImageUtils.upload(image);
+        String result = postService.uploadImage(image);
         if (result != null) {
             return ResponseEntity.ok(result);
         }
         return ResponseEntity.badRequest().body(new ImageResponse());
     }
 
-    @PostMapping("/profile/my")
+    @PostMapping(value = "/profile/my", consumes = "multipart/form-data")
     @ResponseBody
     private ResponseEntity<ProfileResponse> editProfile(
-            @RequestParam(value = "photo", required = false) MultipartFile photo,
-            @RequestParam(value = "name", required = false) String name, @RequestParam(value = "email", required = false) String email,
-            @RequestParam(value = "password", required = false) String password, @RequestParam(value = "removePhoto", required = false) Integer removePhoto) {
+            @RequestParam(value = "photo") MultipartFile photo,
+            @RequestParam(value = "name") String name,
+            @RequestParam(value = "email") String email,
+            @RequestParam(value = "password", required = false) String password,
+            @RequestParam(value = "removePhoto") int removePhoto) {
         return ResponseEntity.ok(authService.editProfile(photo, name, email, password, removePhoto));
+    }
+
+    @PostMapping(value = "/profile/my", consumes = "application/json")
+    @ResponseBody
+    private ResponseEntity<ProfileResponse> editProfile(@RequestBody ProfileRequest request) {
+        return ResponseEntity.ok(authService.editProfile(request));
     }
 
     @PostMapping("/moderation")

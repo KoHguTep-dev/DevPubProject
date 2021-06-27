@@ -4,9 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 @Getter
-public class LoginRequest {
+public class VoteRequest {
 
-    @JsonProperty("e_mail")
-    private String email;
-    private String password;
+    @JsonProperty("post_id")
+    private int postId;
 }

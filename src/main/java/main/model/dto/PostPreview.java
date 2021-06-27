@@ -3,34 +3,20 @@ package main.model.dto;
 import lombok.Getter;
 import lombok.Setter;
 import main.model.entities.Post;
+import org.jsoup.Jsoup;
 
-@Getter
+@Getter @Setter
 public class PostPreview {
 
-    @Setter
     private int id;
-    @Setter
     private long timestamp;
-    @Setter
     private UserBasic user;
-    @Setter
     private String title;
-
     private String announce;
-    @Setter
     private int likeCount;
-    @Setter
     private int dislikeCount;
-    @Setter
     private int commentCount;
-    @Setter
     private int viewCount;
-
-    public void setAnnounce(String announce) {
-        if (announce.length() < 150) {
-            this.announce = announce + "...";
-        } else this.announce = announce.substring(0, 150) + "...";
-    }
 
     public void setVotes(Post post) {
         likeCount = 0;
@@ -56,6 +42,14 @@ public class PostPreview {
         this.dislikeCount = preview.dislikeCount;
         this.commentCount = preview.commentCount;
         this.viewCount = preview.viewCount;
+    }
+
+    public String formatText(String text) {
+        String announce = Jsoup.parse(text).text();
+        if (announce.length() < 150) {
+            announce = announce + "...";
+        } else announce = announce.substring(0, 150) + "...";
+        return announce;
     }
 
 }

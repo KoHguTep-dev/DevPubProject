@@ -3,6 +3,7 @@ package main.service;
 import main.api.request.CommentRequest;
 import main.api.request.ModerationRequest;
 import main.api.request.PostRequest;
+import main.api.request.VoteRequest;
 import main.api.response.*;
 import main.model.dto.PostView;
 import main.model.entities.*;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -37,13 +39,15 @@ public class PostService {
 
     public PostsResponse postResponse(int offset, int limit, String mode) {
         Sort sort;
+        int page = offset / limit;
         switch (mode) {
             case "popular":
                 sort = Sort.by("postComments.size").descending();
                 break;
             case "best":
-                sort = Sort.by("postVotes.size").descending();
-                break;
+                Pageable pageable = PageRequest.of(page, limit);
+                Page<Post> postPage = postsRepository.findAvailablePostsBest(new Date(), pageable);
+                return new PostsResponse(postPage);
             case "early":
                 sort = Sort.by("time").ascending();
                 break;
@@ -51,7 +55,6 @@ public class PostService {
             default:
                 sort = Sort.by("time").descending();
         }
-        int page = offset / limit;
         Pageable pageable = PageRequest.of(page, limit, sort);
         Page<Post> postPage = postsRepository.findAvailablePosts(new Date(), pageable);
         return new PostsResponse(postPage);
@@ -84,7 +87,7 @@ public class PostService {
     }
 
     public PostsResponse byTag(int offset, int limit, String tagName) {
-        List<Post> posts = tagsRepository.findByName(tagName).getPosts();
+        List<Post> posts = postsRepository.findByTag(new Date(), tagName);
         int page = offset / limit;
         Pageable pageable = PageRequest.of(page, limit);
 
@@ -93,11 +96,12 @@ public class PostService {
     }
 
     public PostView getPost(int id) {
-        if (postsRepository.existsById(id)) {
+        if (postsRepository.findById(id).isPresent()) {
             Post post = postsRepository.findById(id).get();
             PostView postView = new PostView();
-            postView.get(post);
-
+            if (postView.isAllowed(post)) {
+                postView.get(post);
+            }
             User user = getUser();
             if (user == null || (!user.isModerator() && !post.getUser().equals(user))) {
                 postsRepository.addViewCount(id);
@@ -111,52 +115,58 @@ public class PostService {
         User user = getUser();
         int page = offset / limit;
         Pageable pageable = PageRequest.of(page, limit);
-        Page<Post> postPage;
+        Page<Post> postPage = null;
 
-        switch (status) {
-            case "inactive":
-                postPage = postsRepository.findByUserInactive(user, pageable);
-                break;
-            case "pending":
-                postPage = postsRepository.findByUserPending(user, pageable);
-                break;
-            case "declined":
-                postPage = postsRepository.findByUserDeclined(user, pageable);
-                break;
-            case "published":
-                postPage = postsRepository.findByUserPublished(user, pageable);
-                break;
-            default:
-                postPage = null;
+        if (user != null) {
+            switch (status) {
+                case "inactive":
+                    postPage = postsRepository.findByUserInactive(user, pageable);
+                    break;
+                case "pending":
+                    postPage = postsRepository.findByUserPending(user, pageable);
+                    break;
+                case "declined":
+                    postPage = postsRepository.findByUserDeclined(user, pageable);
+                    break;
+                case "published":
+                    postPage = postsRepository.findByUserPublished(user, pageable);
+                    break;
+                default:
+                    postPage = null;
+            }
         }
         return new PostsResponse(postPage);
     }
 
-    public PostResponse addPost(PostRequest request) {
-        PostResponse postResponse = checkPost(request);
+    public PostResponse addPost(PostRequest request, SettingsResponse settings) {
+        PostResponse postResponse = new PostResponse().checkPost(request);
         if (postResponse.getErrors().isEmpty()) {
             User user = getUser();
             List<Tag> tags = tagList(request);
             Post post = new Post();
             request.toPost(post, user, tags);
+            if (!settings.isPostPreModeration()) {
+                post.setModerationStatus(ModerationStatus.ACCEPTED);
+            }
             postsRepository.save(post);
         }
         return postResponse;
     }
 
     public PostResponse putPost(PostRequest request, int id) {
-        PostResponse postResponse = checkPost(request);
+        PostResponse postResponse = new PostResponse().checkPost(request);
         if (postResponse.getErrors().isEmpty()) {
             User user = getUser();
-            Post post = postsRepository.findById(id).get();
-            if (user.isModerator() || post.getUser().equals(user)) {
-                List<Tag> tags = tagList(request);
-                ModerationStatus status = post.getModerationStatus();
-                request.toPost(post, user, tags);
-                if (user.isModerator()) {
-                    post.setModerationStatus(status);
+            if (postsRepository.findById(id).isPresent()) {
+                Post post = postsRepository.findById(id).get();
+                if (user != null && (user.isModerator() || post.getUser().equals(user))) {
+                    List<Tag> tags = tagList(request);
+                    request.toPost(post, user, tags);
+                    if (!user.isModerator()) {
+                        post.setModerationStatus(ModerationStatus.NEW);
+                    }
+                    postsRepository.save(post);
                 }
-                postsRepository.save(post);
             }
         }
         return postResponse;
@@ -176,48 +186,51 @@ public class PostService {
             response.addError();
         }
         if (response.getErrors().isEmpty()) {
-            PostComment comment = response.toPostComment(request,
-                    postsRepository.findById(request.getPostId()).get(), getUser());
-            commentRepository.save(comment);
-            response.setId(comment.getId());
+            User user = getUser();
+            if (user != null && postsRepository.findById(request.getPostId()).isPresent()) {
+                PostComment comment = response.toPostComment(request,
+                        postsRepository.findById(request.getPostId()).get(), user);
+                commentRepository.save(comment);
+                response.setId(comment.getId());
+            }
         }
         return response;
     }
 
-    public boolean like(String id) {
-        return addVote(id, (byte) 1);
+    public boolean like(VoteRequest request) {
+        return addVote(request.getPostId(), (byte) 1);
     }
 
-    public boolean dislike(String id) {
-        return addVote(id, (byte) -1);
+    public boolean dislike(VoteRequest request) {
+        return addVote(request.getPostId(), (byte) -1);
     }
 
     public StatisticsResponse statisticsByUser() {
         User user = getUser();
-        StatisticsResponse statistics = new StatisticsResponse();
-        statistics.setPostsCount(postsRepository.getPostCountByUser(user));
-        statistics.setLikesCount(voteRepository.getVoteCountByUser(user, (byte) 1));
-        statistics.setDislikesCount(voteRepository.getVoteCountByUser(user, (byte) -1));
-        statistics.setViewsCount(postsRepository.getViewCountByUser(user));
-        if (postsRepository.findFirstByUser(user) == null) {
-            statistics.setFirstPublication(0);
+        if (user != null) {
+            StatisticsResponse statistics = new StatisticsResponse();
+            statistics.setPostsCount(postsRepository.getPostCountByUser(user));
+            statistics.setLikesCount(voteRepository.getVoteCountByUser(user, (byte) 1));
+            statistics.setDislikesCount(voteRepository.getVoteCountByUser(user, (byte) -1));
+            statistics.setViewsCount(postsRepository.getViewCountByUser(user));
+            statistics.setFirstPublication(postsRepository.findFirstByUser(user));
             return statistics;
         }
-        statistics.setFirstPublication(postsRepository.findFirstByUser(user).getTime() / 1000);
-        return statistics;
+        return null;
     }
 
     public StatisticsResponse statistics(SettingsResponse settings) {
-        StatisticsResponse statistics = new StatisticsResponse();
-        if (!settings.isStatisticsIsPublic() && !getUser().isModerator()) {
+        User user = getUser();
+        if ((user != null && user.isModerator()) || settings.isStatisticsIsPublic()) {
+            StatisticsResponse statistics = new StatisticsResponse();
+            statistics.setPostsCount(postsRepository.getCountAllAvailable(new Date()));
+            statistics.setLikesCount(voteRepository.getVoteCount((byte) 1));
+            statistics.setDislikesCount(voteRepository.getVoteCount((byte) -1));
+            statistics.setViewsCount(postsRepository.getViewCount());
+            statistics.setFirstPublication(postsRepository.findFirst());
             return statistics;
         }
-        statistics.setPostsCount(postsRepository.getCountAllAvailable(new Date()));
-        statistics.setLikesCount(voteRepository.getVoteCount((byte) 1));
-        statistics.setDislikesCount(voteRepository.getVoteCount((byte) -1));
-        statistics.setViewsCount(postsRepository.getViewCount());
-        statistics.setFirstPublication(postsRepository.findFirst().getTime() / 1000);
-        return statistics;
+        return null;
     }
 
     public PostsResponse moderationList(int offset, int limit, String status) {
@@ -259,13 +272,20 @@ public class PostService {
                         post.setModerationStatus(ModerationStatus.DECLINED);
                         break;
                     default:
-                        return result;
+                        return false;
                 }
                 postsRepository.save(post);
                 result = true;
             }
         }
         return result;
+    }
+
+    public String uploadImage(MultipartFile file) {
+        if (getUser() != null) {
+            return ImageUtils.upload(file);
+        }
+        return null;
     }
 
     private User getUser() {
@@ -276,17 +296,6 @@ public class PostService {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private PostResponse checkPost(PostRequest request) {
-        PostResponse postResponse = new PostResponse();
-        if (request.getTitle().length() < 3) {
-            postResponse.addTitleError();
-        }
-        if (request.getText().length() < 50) {
-            postResponse.addTextError();
-        }
-        return postResponse;
     }
 
     private List<Tag> tagList(PostRequest request) {
@@ -303,33 +312,30 @@ public class PostService {
         return tags;
     }
 
-    private boolean addVote(String id, byte value) {
-        String s = id.replaceAll("\\D", "");
-        int postId = Integer.parseInt(s);
-        boolean result = true;
-        Post post = postsRepository.findById(postId).get();
+    private boolean addVote(int id, byte value) {
+        boolean result = false;
         User user = getUser();
-        if (user == null) {
-            result = false;
-            return result;
-        }
-        if (voteRepository.findVote(post, user, value).isPresent()) {
-            result = false;
-            return result;
-        }
-        value *= -1;
-        Optional<PostVote> optional = voteRepository.findVote(post, user, value);
-        if (optional.isPresent()) {
-            PostVote vote = optional.get();
+        if (user != null && postsRepository.findById(id).isPresent()) {
+            Post post = postsRepository.findById(id).get();
+            if (voteRepository.findVote(post, user, value).isPresent()) {
+                return result;
+            }
             value *= -1;
+            Optional<PostVote> optional = voteRepository.findVote(post, user, value);
+            if (optional.isPresent()) {
+                PostVote vote = optional.get();
+                value *= -1;
+                vote.setValue(value);
+                voteRepository.save(vote);
+                result = true;
+                return result;
+            }
+            value *= -1;
+            PostVote vote = new PostVote(post, getUser());
             vote.setValue(value);
             voteRepository.save(vote);
-            return result;
+            result = true;
         }
-        value *= -1;
-        PostVote vote = new PostVote(post, getUser());
-        vote.setValue(value);
-        voteRepository.save(vote);
         return result;
     }
 

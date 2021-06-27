@@ -7,10 +7,11 @@ import main.model.entities.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class TagsResponse {
 
-    @Getter @Setter
+    @Getter
     private List<TagWithWeight> tags = new ArrayList<>();
     private double k;
     @Setter
@@ -21,29 +22,20 @@ public class TagsResponse {
         this.tagWithWeight = tagWithWeight;
     }
 
-    public List<TagWithWeight> getTags(List<Tag> tagList) {
+    public List<TagWithWeight> setTags(Map<Tag, Integer> tagList) {
         if (tags.isEmpty()) {
             if (k == 0) {
                 k = tagWithWeight.computeK(count, tagList);
             }
-            tagList.forEach(tag -> {
+            tagList.forEach((tag, integer) -> {
                 tagWithWeight.setName(tag.getName());
-                tagWithWeight.setWeight(tag, k, count);
+                tagWithWeight.setWeight(integer, k, count);
 
                 TagWithWeight tagW = new TagWithWeight();
                 tagW.getCopy(tagWithWeight);
                 tags.add(tagW);
             });
         }
-        return tags;
-    }
-
-    public List<TagWithWeight> getTags(String query) {
-        tags.clear();
-        TagWithWeight weight = new TagWithWeight();
-        weight.setName(query);
-        weight.setWeight(1.0);
-        tags.add(weight);
         return tags;
     }
 

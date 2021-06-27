@@ -23,9 +23,12 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
     void addViewCount(@Param("id") int id);
 
     @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
-    Page<Post> findAvailablePosts(Date time, Pageable pageable);
+    List<Post> findAvailablePosts(Date time);
 
     @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
+    Page<Post> findAvailablePosts(Date time, Pageable pageable);
+
+    @Query("select p from Post p left join PostVote pv on p.id = pv.postId where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time group by p.title order by sum(case when pv.value = 1 then 1 else 0 end) desc")
     Page<Post> findAvailablePostsBest(Date time, Pageable pageable);
 
     @Query("select count(*) from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
@@ -39,6 +42,9 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
 
     @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time and date(time) = :date")
     Page<Post> findByDate(Date time, Date date, Pageable pageable);
+
+    @Query("select p from Post p join TagToPost tp on p.id = tp.postId join Tag t on t.id = tp.tagId where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time and t.name = :tagName")
+    List<Post> findByTag(Date time, String tagName);
 
     @Query("select time from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
     List<Date> getAllPostTime(Date time);
@@ -68,7 +74,7 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
     int getPostCountByUser(User user);
 
     @Query("select sum(p.viewCount) from Post p where p.user = :user and p.isActive = true and p.moderationStatus = 'ACCEPTED'")
-    int getViewCountByUser(User user);
+    Integer getViewCountByUser(User user);
 
     @Query("select min(p.time) from Post p where p.user = :user and p.isActive = true and p.moderationStatus = 'ACCEPTED'")
     Timestamp findFirstByUser(User user);
