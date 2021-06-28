@@ -18,15 +18,18 @@ public class PostRequest {
     private String text;
 
     public void toPost(Post post, User user, List<Tag> tags) {
-        long current = new Date().getTime();
+        long current = new Date().getTime() / 1000;
         if (timestamp < current) {
             timestamp = current;
         }
-        if (active == 1) {
-            post.setActive(true);
+        post.setActive(active == 1);
+        if (user.isModerator()) {
+            post.setModeratorId(user.getId());
         }
-        post.setUser(user);
-        post.setTime(new Date(timestamp));
+        if (post.getUser() == null) {
+            post.setUser(user);
+        }
+        post.setTime(new Date(timestamp * 1000));
         post.setTitle(title);
         post.setText(text);
         post.setViewCount(0);

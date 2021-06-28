@@ -66,7 +66,7 @@ public class PostService {
             postResponse(offset, limit, "recent");
         }
         int page = offset / limit;
-        Pageable pageable = PageRequest.of(page, limit);
+        Pageable pageable = PageRequest.of(page, limit, Sort.by("time").descending());
 
         Page<Post> postPage = postsRepository.findByQuery(new Date(), query, pageable);
         return new PostsResponse(postPage);
@@ -74,7 +74,7 @@ public class PostService {
 
     public PostsResponse byDate(int offset, int limit, String date) {
         int page = offset / limit;
-        Pageable pageable = PageRequest.of(page, limit);
+        Pageable pageable = PageRequest.of(page, limit, Sort.by("time").descending());
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         Date local = null;
         try {
@@ -87,11 +87,9 @@ public class PostService {
     }
 
     public PostsResponse byTag(int offset, int limit, String tagName) {
-        List<Post> posts = postsRepository.findByTag(new Date(), tagName);
         int page = offset / limit;
-        Pageable pageable = PageRequest.of(page, limit);
-
-        Page<Post> postPage = new PageImpl<>(posts, pageable, posts.size());
+        Pageable pageable = PageRequest.of(page, limit, Sort.by("time").descending());
+        Page<Post> postPage = postsRepository.findByTag(new Date(), tagName, pageable);
         return new PostsResponse(postPage);
     }
 
@@ -99,10 +97,10 @@ public class PostService {
         if (postsRepository.findById(id).isPresent()) {
             Post post = postsRepository.findById(id).get();
             PostView postView = new PostView();
-            if (postView.isAllowed(post)) {
+            User user = getUser();
+            if (postView.isAllowed(post) || post.getUser().equals(user) || (user != null && user.isModerator())) {
                 postView.get(post);
             }
-            User user = getUser();
             if (user == null || (!user.isModerator() && !post.getUser().equals(user))) {
                 postsRepository.addViewCount(id);
             }
@@ -114,7 +112,7 @@ public class PostService {
     public PostsResponse getMyPosts(int offset, int limit, String status) {
         User user = getUser();
         int page = offset / limit;
-        Pageable pageable = PageRequest.of(page, limit);
+        Pageable pageable = PageRequest.of(page, limit, Sort.by("time").descending());
         Page<Post> postPage = null;
 
         if (user != null) {
@@ -236,7 +234,7 @@ public class PostService {
     public PostsResponse moderationList(int offset, int limit, String status) {
         User user = getUser();
         int page = offset / limit;
-        Pageable pageable = PageRequest.of(page, limit);
+        Pageable pageable = PageRequest.of(page, limit, Sort.by("time").descending());
         Page<Post> postPage = null;
 
         if (user != null && user.isModerator()) {

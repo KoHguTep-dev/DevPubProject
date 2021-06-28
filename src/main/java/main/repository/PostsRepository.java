@@ -37,14 +37,14 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
     @Query("select count(*) from Post p where p.isActive = true and p.moderationStatus = 'NEW'")
     int getCountForModeration();
 
-    @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time and title like %:query% or text like %:query%")
+    @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time and (title like %:query% or text like %:query%)")
     Page<Post> findByQuery(Date time, String query, Pageable pageable);
 
     @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time and date(time) = :date")
     Page<Post> findByDate(Date time, Date date, Pageable pageable);
 
     @Query("select p from Post p join TagToPost tp on p.id = tp.postId join Tag t on t.id = tp.tagId where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time and t.name = :tagName")
-    List<Post> findByTag(Date time, String tagName);
+    Page<Post> findByTag(Date time, String tagName, Pageable pageable);
 
     @Query("select time from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
     List<Date> getAllPostTime(Date time);
