@@ -265,9 +265,11 @@ public class PostService {
                 switch (request.getDecision()) {
                     case "accept":
                         post.setModerationStatus(ModerationStatus.ACCEPTED);
+                        post.setModeratorId(user.getId());
                         break;
                     case "decline":
                         post.setModerationStatus(ModerationStatus.DECLINED);
+                        post.setModeratorId(user.getId());
                         break;
                     default:
                         return false;
