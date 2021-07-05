@@ -103,6 +103,7 @@ public class PostService {
             }
             if (user == null || (!user.isModerator() && !post.getUser().equals(user))) {
                 postsRepository.addViewCount(id);
+                postView.addViewCount();
             }
             return postView;
         }

@@ -16,7 +16,7 @@ public class EmailService {
         message.setFrom("noreply@devpub.com");
         message.setTo(to);
         message.setSubject(subject);
-        message.setText(text);
+        message.setText("https://devpub-pavelm.herokuapp.com" + text);
         mailSender.send(message);
     }
 

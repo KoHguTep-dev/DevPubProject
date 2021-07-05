@@ -68,4 +68,7 @@ public class PostView {
         return post.isActive() && post.getModerationStatus() == ModerationStatus.ACCEPTED && time > postTime;
     }
 
+    public void addViewCount() {
+        viewCount = viewCount + 1;
+    }
 }

@@ -28,7 +28,7 @@ public interface PostsRepository extends JpaRepository<Post, Integer> {
     @Query("select p from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
     Page<Post> findAvailablePosts(Date time, Pageable pageable);
 
-    @Query("select p from Post p left join PostVote pv on p.id = pv.postId where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time group by p.title order by sum(case when pv.value = 1 then 1 else 0 end) desc")
+    @Query("select p from Post p left join PostVote pv on p.id = pv.postId where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time group by p order by sum(case when pv.value = 1 then 1 else 0 end) desc")
     Page<Post> findAvailablePostsBest(Date time, Pageable pageable);
 
     @Query("select count(*) from Post p where p.isActive = true and p.moderationStatus = 'ACCEPTED' and p.time <= :time")
