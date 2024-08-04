@@ -14,6 +14,11 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env: 
+  MAVEN_CLEAN: ${{ vars.MAVEN_CLEAN }}
+  MAVEN_PACKAGE: ${{ vars.MAVEN_PACKAGE }}
+  SECRET_WORD: ${{ secrets.SECRET_WORD }}
+
 jobs:
   build:
 
@@ -27,8 +32,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
+    - name: Start
+      run: echo "start maven build"
+    - name: Test env
+    - run: echo $MAVEN_CLEAN $MAVEN_PACKAGE
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn -B $MAVEN_CLEAN $MAVEN_PACKAGE --file $SECRET_WORD
+    - name: Secret test
+      run: echo "we use $SECRET_WORD"  
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
