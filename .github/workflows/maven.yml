@@ -35,9 +35,9 @@ jobs:
     - name: Start
       run: echo "start maven build"
     - name: Test env
-      run: echo "$MAVEN_CLEAN" "$MAVEN_PACKAGE"
+      run: echo $MAVEN_CLEAN $MAVEN_PACKAGE
     - name: Build with Maven
-      run: mvn -B "$MAVEN_CLEAN" "$MAVEN_PACKAGE" --file "$SECRET_WORD"
+      run: mvn -B $MAVEN_CLEAN $MAVEN_PACKAGE --file pom.xml
     - name: Secret test
       run: echo "we use $SECRET_WORD"  
 
