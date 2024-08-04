@@ -15,9 +15,9 @@ on:
     branches: [ "master" ]
 
 env: 
-  MAVEN_CLEAN: ${{ vars.MAVEN_CLEAN }}
-  MAVEN_PACKAGE: ${{ vars.MAVEN_PACKAGE }}
-  SECRET_WORD: ${{ secrets.SECRET_WORD }}
+  MAVEN_CLEAN: ${{ 111.vars.MAVEN_CLEAN }}
+  MAVEN_PACKAGE: ${{ 111.vars.MAVEN_PACKAGE }}
+  SECRET_WORD: ${{ 111.secrets.SECRET_WORD }}
 
 jobs:
   build:
