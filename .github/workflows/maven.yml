@@ -15,9 +15,9 @@ on:
     branches: [ "master" ]
 
 env: 
-  MAVEN_CLEAN: ${{ 111.vars.MAVEN_CLEAN }}
-  MAVEN_PACKAGE: ${{ 111.vars.MAVEN_PACKAGE }}
-  SECRET_WORD: ${{ 111.secrets.SECRET_WORD }}
+  MAVEN_CLEAN: ${{ vars.MAVEN_CLEAN }}
+  MAVEN_PACKAGE: ${{ vars.MAVEN_PACKAGE }}
+  SECRET_WORD: ${{ secrets.SECRET_WORD }}
 
 jobs:
   build:
@@ -35,9 +35,9 @@ jobs:
     - name: Start
       run: echo "start maven build"
     - name: Test env
-      run: echo $MAVEN_CLEAN $MAVEN_PACKAGE
+      run: echo ${{ vars.MAVEN_CLEAN }} ${{ vars.MAVEN_PACKAGE }}
     - name: Build with Maven
-      run: mvn -B $MAVEN_CLEAN $MAVEN_PACKAGE --file pom.xml
+      run: mvn -B ${{ vars.MAVEN_CLEAN }} ${{ vars.MAVEN_PACKAGE }} --file pom.xml
     - name: Secret test
       run: echo "we use $SECRET_WORD"  
 
